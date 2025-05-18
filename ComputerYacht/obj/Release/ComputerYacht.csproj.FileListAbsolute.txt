@@ -1,0 +1,2 @@
+D:\work\yacht2\ComputerYacht\obj\Release\ComputerYacht.csproj.AssemblyReference.cache
+D:\work\yacht2\ComputerYacht\obj\Release\ComputerYacht.csproj.CoreCompileInputs.cache
