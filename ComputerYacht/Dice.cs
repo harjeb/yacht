@@ -60,16 +60,16 @@ namespace ComputerYacht
 		{
 			int num = 0;
 			int num2 = 0;
-			int[] array = Dice.CreateDice(Dice);
+			int[] array = CreateDice(Dice);
 			do
 			{
 				num2++;
-				if (Dice.DiceMatchCounts(ref array, ref Counts))
+				if (DiceMatchCounts(ref array, ref Counts))
 				{
 					num++;
 				}
 			}
-			while (!Dice.IncrementDice(ref array));
+			while (!IncrementDice(ref array));
 			return 1.0 * (double)num / (double)num2;
 		}
 	}
