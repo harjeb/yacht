@@ -12,7 +12,7 @@ namespace ComputerYacht
 		}
 
 		// Token: 0x06000039 RID: 57 RVA: 0x00003A74 File Offset: 0x00001C74
-		public string PlayerToString(int Player)
+		public new string PlayerToString(int Player)
 		{
 			StringBuilder stringBuilder = new StringBuilder();
 			stringBuilder.AppendLine("Player " + this.iPlayerIndex.ToString());
@@ -46,7 +46,7 @@ namespace ComputerYacht
 		}
 
 		// Token: 0x0600003C RID: 60 RVA: 0x00003B30 File Offset: 0x00001D30
-		public string DicesToString()
+		public new string DicesToString()
 		{
 			StringBuilder stringBuilder = new StringBuilder();
 			for (int i = 0; i <= 4; i++)

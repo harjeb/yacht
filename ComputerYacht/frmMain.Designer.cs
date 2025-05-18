@@ -20,9 +20,9 @@
 			this.tbDices = new global::System.Windows.Forms.TextBox();
 			this.tbScores = new global::System.Windows.Forms.TextBox();
 			this.tbStats = new global::System.Windows.Forms.TextBox();
-			this.tmrMain = new global::System.Windows.Forms.Timer(this.components);
 			this.btnCopy = new global::System.Windows.Forms.Button();
-			this.btnPause = new global::System.Windows.Forms.Button();
+			// this.btnPause = new global::System.Windows.Forms.Button(); // Removed for manual step
+			this.btnManualStep = new global::System.Windows.Forms.Button();
 			base.SuspendLayout();
 			this.tbDices.Anchor = (global::System.Windows.Forms.AnchorStyles.Top | global::System.Windows.Forms.AnchorStyles.Bottom | global::System.Windows.Forms.AnchorStyles.Left);
 			this.tbDices.Font = new global::System.Drawing.Font("Microsoft Sans Serif", 14f, global::System.Drawing.FontStyle.Regular, global::System.Drawing.GraphicsUnit.Point, 0);
@@ -44,8 +44,8 @@
 			this.tbStats.Size = new global::System.Drawing.Size(301, 456);
 			this.tbStats.TabIndex = 3;
 			this.tbStats.MouseMove += new global::System.Windows.Forms.MouseEventHandler(this.tbStats_MouseMove);
-			this.tmrMain.Interval = 1;
-			this.tmrMain.Tick += new global::System.EventHandler(this.tmrMain_Tick);
+			// this.tmrMain.Interval = 1; // Removed for manual step
+			// this.tmrMain.Tick += new global::System.EventHandler(this.tmrMain_Tick); // Removed for manual step
 			this.btnCopy.Anchor = (global::System.Windows.Forms.AnchorStyles.Bottom | global::System.Windows.Forms.AnchorStyles.Right);
 			this.btnCopy.Location = new global::System.Drawing.Point(640, 476);
 			this.btnCopy.Name = "btnCopy";
@@ -54,18 +54,28 @@
 			this.btnCopy.Text = "&Copy Text";
 			this.btnCopy.UseVisualStyleBackColor = true;
 			this.btnCopy.Click += new global::System.EventHandler(this.btnCopy_Click);
-			this.btnPause.Anchor = (global::System.Windows.Forms.AnchorStyles.Bottom | global::System.Windows.Forms.AnchorStyles.Left);
-			this.btnPause.Location = new global::System.Drawing.Point(12, 476);
-			this.btnPause.Name = "btnPause";
-			this.btnPause.Size = new global::System.Drawing.Size(75, 23);
-			this.btnPause.TabIndex = 5;
-			this.btnPause.Text = "(Un)Slow";
-			this.btnPause.UseVisualStyleBackColor = true;
-			this.btnPause.Click += new global::System.EventHandler(this.btnPause_Click);
+			// Removed btnPause for manual step
+			// this.btnPause.Anchor = (global::System.Windows.Forms.AnchorStyles.Bottom | global::System.Windows.Forms.AnchorStyles.Left);
+			// this.btnPause.Location = new global::System.Drawing.Point(12, 476);
+			// this.btnPause.Name = "btnPause";
+			// this.btnPause.Size = new global::System.Drawing.Size(75, 23);
+			// this.btnPause.TabIndex = 5;
+			// this.btnPause.Text = "(Un)Slow";
+			// this.btnPause.UseVisualStyleBackColor = true;
+			// this.btnPause.Click += new global::System.EventHandler(this.btnPause_Click);
+			this.btnManualStep.Anchor = (global::System.Windows.Forms.AnchorStyles.Bottom | global::System.Windows.Forms.AnchorStyles.Left);
+			this.btnManualStep.Location = new global::System.Drawing.Point(12, 476);
+			this.btnManualStep.Name = "btnManualStep";
+			this.btnManualStep.Size = new global::System.Drawing.Size(150, 23); // Adjusted size for longer text
+			this.btnManualStep.TabIndex = 5; // Next available tab index
+			this.btnManualStep.Text = "手动单步模拟";
+			this.btnManualStep.UseVisualStyleBackColor = true;
+			this.btnManualStep.Click += new global::System.EventHandler(this.btnManualStep_Click);
 			base.AutoScaleDimensions = new global::System.Drawing.SizeF(6f, 13f);
 			base.AutoScaleMode = global::System.Windows.Forms.AutoScaleMode.Font;
 			base.ClientSize = new global::System.Drawing.Size(730, 512);
-			base.Controls.Add(this.btnPause);
+			base.Controls.Add(this.btnManualStep);
+			// base.Controls.Add(this.btnPause); // Removed for manual step
 			base.Controls.Add(this.btnCopy);
 			base.Controls.Add(this.tbStats);
 			base.Controls.Add(this.tbScores);
@@ -92,12 +102,13 @@
 		private global::System.Windows.Forms.TextBox tbStats;
 
 		// Token: 0x04000084 RID: 132
-		private global::System.Windows.Forms.Timer tmrMain;
+		// private global::System.Windows.Forms.Timer tmrMain; // Removed for manual step
 
 		// Token: 0x04000085 RID: 133
 		private global::System.Windows.Forms.Button btnCopy;
 
 		// Token: 0x04000086 RID: 134
-		private global::System.Windows.Forms.Button btnPause;
+		// private global::System.Windows.Forms.Button btnPause; // Removed for manual step
+		private global::System.Windows.Forms.Button btnManualStep;
 	}
 }
