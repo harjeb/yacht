@@ -316,3 +316,40 @@ The project was failing to compile with a CS0234 error (System.Linq not found) b
 **Details:**
 - Modified: [`ComputerYacht/ComputerYacht.csproj`](ComputerYacht/ComputerYacht.csproj:11) (TargetFrameworkVersion changed from v2.0 to v4.0)
 - Added: [`ComputerYacht/ComputerYacht.csproj`](ComputerYacht/ComputerYacht.csproj:39) (Reference to System.Core added)
+---
+**Timestamp:** 2025-05-18 23:19:26
+**Decision:** Implement manual control over AI's available scoring categories via UI checkboxes in [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0) for the "get hold suggestion" feature.
+**Reasoning:**
+*   Fulfills user request for more flexible testing of AI's retention suggestion capabilities.
+*   Allows simulation of various game states where certain categories might be unavailable or strategically ignored.
+*   Enhances user control over the AI testing process.
+**Impacted Files:**
+*   [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0): Addition of 13 `CheckBox` controls. Modification of `btnGetHoldSuggestion_Click` to read checkbox states and build `availableCategories` array. Modification of `InitializeNewGame` to reset checkbox states.
+*   [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0): The `DecideDiceToHold` method's signature is already compatible as it accepts an `availableCategories` array. No code change required in this method itself.
+*   [`ComputerYacht/Yacht.cs`](ComputerYacht/Yacht.cs:0): The `GetPlayerAvailableCategories()` method will no longer be used by the `btnGetHoldSuggestion_Click` event in [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0) for determining AI's available categories in this specific UI-driven flow.
+**Alternatives Considered:** None, as this was a direct feature request for UI-based control.
+**Follow-up Actions:** Proceed with implementation based on the generated pseudocode.
+---
+### Decision (Architecture Update)
+[2025-05-18 23:23:00] - 更新架构文档以反映手动控制AI可用计分项的功能。
+
+**Rationale:**
+根据用户请求，允许通过UI上的CheckBoxes手动选择哪些计分项对AI的保留建议功能可用，从而实现更灵活的AI测试。`spec-pseudocode`模式已为此功能生成了规范。
+
+**Implications/Details:**
+- [`memory-bank/architecture.md`](memory-bank/architecture.md:0) 已更新，主要修改包括：
+    - 在概述中加入了新UI控件和手动分类选择功能的描述。
+    - 更新了对 [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0) 的描述，说明了新增的13个 `CheckBox` 控件，以及 `btnGetHoldSuggestion_Click` 事件如何从这些CheckBoxes构建 `availableCategories` 数组。明确指出在此流程中不再调用 `Yacht.GetPlayerAvailableCategories()`。
+    - 更新了手动输入骰子获取AI建议功能的数据流图 (Mermaid) 和文本描述，以反映新的 `availableCategories` 构建方式和 CheckBox 输入。
+    - 更新了文档的总结部分。
+- 此更新为后续开发和模式（如 `code` 模式）实现此功能提供了清晰的架构指导。
+
+**Impacted Files (Conceptual):**
+*   [`memory-bank/architecture.md`](memory-bank/architecture.md:0) (直接修改)
+*   [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0) (预期UI和逻辑变更)
+*   [`ComputerYacht/frmMain.Designer.cs`](ComputerYacht/frmMain.Designer.cs:0) (预期UI控件添加)
+*   [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0) (方法签名不变，但其 `availableCategories` 参数的来源改变)
+*   [`ComputerYacht/Yacht.cs`](ComputerYacht/Yacht.cs:0) (`GetPlayerAvailableCategories()` 在此特定场景中不再被调用)
+
+**Alternatives Considered:** 无，此为直接功能请求。
+**Follow-up Actions:** 架构文档已更新。下一步将是代码模式根据此架构和相关伪代码实现功能。

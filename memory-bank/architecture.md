@@ -1,10 +1,10 @@
 # Yacht 游戏模拟器软件架构
 
-**日期:** 2025-05-18 (更新于: 2025-05-18 22:15:00)
+**日期:** 2025-05-18 (更新于: 2025-05-18 23:22:00)
 
 ## 1. 架构概述
 
-Yacht 游戏模拟器采用以 Windows Forms 为中心的事件驱动架构。其核心模拟流程，经过最近的细化，允许用户通过 "手动单步模拟" 按钮点击，手动逐步执行计算机玩家回合中的每一个具体步骤。此外，还新增了允许用户手动输入5个骰子点数、**指定当前掷骰次数以及当前上区总分**，并获取AI基于此完整上下文的保留建议的功能。虽然没有严格的分层，但可以观察到以下概念层：
+Yacht 游戏模拟器采用以 Windows Forms 为中心的事件驱动架构。其核心模拟流程，经过最近的细化，允许用户通过 "手动单步模拟" 按钮点击，手动逐步执行计算机玩家回合中的每一个具体步骤。此外，还新增了允许用户手动输入5个骰子点数、**指定当前掷骰次数、当前上区总分以及手动选择哪些计分项对AI可用（通过一组CheckBoxes）**，并获取AI基于此完整上下文的保留建议的功能。虽然没有严格的分层，但可以观察到以下概念层：
 
 *   **表示层 (Presentation Layer):** 由 [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0) 处理，负责用户界面、事件处理（如按钮点击）以及统计数据的显示。
 *   **应用逻辑/领域层 (Application Logic/Domain Layer):**
@@ -65,15 +65,17 @@ Yacht 游戏模拟器采用以 Windows Forms 为中心的事件驱动架构。�
         *   提供一个“获取建议”按钮 (`btnGetHoldSuggestion`)。
         *   当按钮点击时，读取输入框中的骰子点数、选择的掷骰次数和上区总分，进行验证。
         *   调用 `yYacht.SetManuallyEnteredDice()` 将验证后的骰子值传递给 `Yacht` 对象。
-        *   获取当前可用的计分项 `availableCategories = yYacht.GetPlayerAvailableCategories(0)`。
-        *   调用 `compPlayer.DecideDiceToHold(currentDiceValues, rollNumber, availableCategories, currentUpperScore)`，传递所有收集到的上下文信息。
+        *   **新增13个 `CheckBox` 控件，每个对应一个计分项，允许用户手动选择哪些计分项对AI可用。**
+        *   **`btnGetHoldSuggestion_Click` 事件处理程序将读取这些 CheckBoxes 的状态，构建一个布尔数组 `availableCategoriesFromCheckboxes`。**
+        *   **在此流程中，不再调用 `yYacht.GetPlayerAvailableCategories(0)` 来获取可用计分项。**
+        *   调用 `compPlayer.DecideDiceToHold(currentDiceValues, rollNumber, availableCategoriesFromCheckboxes, currentUpperScore)`，传递所有收集到的上下文信息。
         *   接收 `Computer.cs` 返回的建议保留的骰子 (boolean array)。
         *   在UI上高亮或标记建议保留的骰子。
 *   **交互:**
     *   实例化并管理 [`ComputerYacht/Yacht.cs`](ComputerYacht/Yacht.cs:0) 和 [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0) 对象。
     *   响应用户UI操作。
     *   协调对其他模块方法的调用。
-    *   对于手动输入骰子功能，会调用 `yYacht.SetManuallyEnteredDice()` 和 `compPlayer.DecideDiceToHold()` 并传递更丰富的上下文。
+    *   对于手动输入骰子功能，会调用 `yYacht.SetManuallyEnteredDice()` 和 `compPlayer.DecideDiceToHold()` 并传递更丰富的上下文，**其中 `availableCategories` 来自UI上的CheckBoxes**。
     *   直接进行文件 I/O 以记录游戏数据。
 
 ### 2.4. 骰子概率计算 (`Dice.cs`)
@@ -140,14 +142,15 @@ sequenceDiagram
     User->>frmMain: 输入5个骰子点数 (txtDice1-5)
     User->>frmMain: 选择掷骰次数 (cmbRollNumber)
     User->>frmMain: 输入上区总分 (txtCurrentUpperScore)
+    User->>frmMain: **勾选/取消勾选计分项 CheckBoxes**
     User->>frmMain: 点击 "获取建议" 按钮
-    frmMain->>frmMain: 读取并验证所有输入
+    frmMain->>frmMain: 读取并验证所有输入 (骰子, 掷骰次数, 上区总分)
+    frmMain->>frmMain: **读取13个 CheckBox 状态，构建 availableCategoriesFromCheckboxes**
     alt 输入有效
         frmMain->>yYacht: SetManuallyEnteredDice(diceValues)
         yYacht->>yYacht: 更新内部骰子状态 (iDicesValue)
-        frmMain->>yYacht: GetPlayerAvailableCategories(0)
-        yYacht-->>frmMain: availableCategories
-        frmMain->>compPlayer: DecideDiceToHold(diceValues, rollNumber, availableCategories, currentUpperScore)
+        note over frmMain: 不再调用 yYacht.GetPlayerAvailableCategories()
+        frmMain->>compPlayer: DecideDiceToHold(diceValues, rollNumber, availableCategoriesFromCheckboxes, currentUpperScore)
         compPlayer->>compPlayer: 计算最佳保留策略 (考虑所有上下文)
         compPlayer-->>frmMain: 返回建议保留的骰子 (boolean[])
         frmMain->>frmMain: 更新UI显示建议
@@ -160,21 +163,23 @@ sequenceDiagram
     a.  用户在UI ([`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0)) 提供的5个输入框中输入骰子点数。
     b.  **用户通过 `cmbRollNumber` 选择当前是第几次掷骰的结果。**
     c.  **用户在 `txtCurrentUpperScore` 输入当前的上区总分。**
-    d.  用户点击“获取建议”按钮。
+    d.  **用户勾选或取消勾选代表各个计分项的 CheckBox 控件。**
+    e.  用户点击“获取建议”按钮。
 2.  **UI 处理 ([`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0)):**
-    a.  事件处理器被触发。
+    a.  `btnGetHoldSuggestion_Click` 事件处理器被触发。
     b.  读取5个骰子输入框的值、`cmbRollNumber` 的值 (`rollNumber`) 和 `txtCurrentUpperScore` 的值 (`currentUpperScore`)。
-    c.  验证所有输入值的有效性。
-    d.  如果验证失败，向用户显示错误提示。
-    e.  如果验证成功：
+    c.  **读取13个 CheckBox 控件的状态，构建一个布尔数组 `availableCategoriesFromCheckboxes`，其中 `true` 表示对应的计分项被选中（可用），`false` 表示未选中（不可用）。**
+    d.  验证骰子、掷骰次数和上区总分输入值的有效性。
+    e.  如果验证失败，向用户显示错误提示。
+    f.  如果验证成功：
         i.  将5个骰子点数（`diceValues`）传递给 `yYacht.SetManuallyEnteredDice(diceValues)`。
-        ii. 调用 `yYacht.GetPlayerAvailableCategories(0)` 获取 `availableCategories`。
-        iii. 调用 `compPlayer.DecideDiceToHold(diceValues, rollNumber, availableCategories, currentUpperScore)`。
+        ii. **不再调用 `yYacht.GetPlayerAvailableCategories(0)`。**
+        iii. 调用 `compPlayer.DecideDiceToHold(diceValues, rollNumber, availableCategoriesFromCheckboxes, currentUpperScore)`。
 3.  **游戏逻辑处理 ([`ComputerYacht/Yacht.cs`](ComputerYacht/Yacht.cs:0)):**
     a.  `SetManuallyEnteredDice(diceValues)` 方法被调用，更新内部骰子状态。
-    b.  `GetPlayerAvailableCategories(0)` 返回当前可用计分项。
+    b.  **`GetPlayerAvailableCategories(0)` 在此特定用户场景中不再被 `frmMain.cs` 调用。**
 4.  **AI 决策请求 ([`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0)) 与计算 ([`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0)):**
-    a.  `frmMain.cs` 调用 `compPlayer.DecideDiceToHold()` 并传递 `diceValues`, `rollNumber`, `availableCategories`, 和 `currentUpperScore`。
+    a.  `frmMain.cs` 调用 `compPlayer.DecideDiceToHold()` 并传递 `diceValues`, `rollNumber`, `availableCategoriesFromCheckboxes`, 和 `currentUpperScore`。
     b.  `Computer.cs` 的 `DecideDiceToHold()` 方法接收所有这些参数。
     c.  AI执行其决策逻辑，利用所有上下文信息计算出建议保留的骰子。
     d.  返回一个布尔数组 (`suggestedHoldDice`) 给 `frmMain.cs`。
@@ -196,4 +201,4 @@ sequenceDiagram
 
 ## 5. 总结
 
-Yacht 游戏模拟器的架构以功能为中心，模块化程度合理。[`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0) 作为表示层和精细控制中心，管理回合内步骤的状态机（用于逐步模拟）和处理用户直接输入（用于手动骰子建议，现在包含掷骰次数和上区得分），并协调对其他模块的调用。[`ComputerYacht/Yacht.cs`](ComputerYacht/Yacht.cs:0) 封装核心游戏规则和状态。[`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0) 实现AI决策逻辑，其 `DecideDiceToHold` 方法现在可以处理更丰富的游戏上下文（包括掷骰次数和上区得分）来进行决策。[`ComputerYacht/Dice.cs`](ComputerYacht/Dice.cs:0) 提供概率计算支持。
+Yacht 游戏模拟器的架构以功能为中心，模块化程度合理。[`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0) 作为表示层和精细控制中心，管理回合内步骤的状态机（用于逐步模拟）和处理用户直接输入（用于手动骰子建议，现在包含掷骰次数、上区得分 **以及通过CheckBoxes手动选择的可用计分项**），并协调对其他模块的调用。[`ComputerYacht/Yacht.cs`](ComputerYacht/Yacht.cs:0) 封装核心游戏规则和状态。[`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0) 实现AI决策逻辑，其 `DecideDiceToHold` 方法现在可以处理更丰富的游戏上下文（包括掷骰次数、上区得分和用户指定的可用计分项）来进行决策。[`ComputerYacht/Dice.cs`](ComputerYacht/Dice.cs:0) 提供概率计算支持。

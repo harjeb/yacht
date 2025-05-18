@@ -58,3 +58,9 @@ ComputerYacht is a C# Windows Forms application that simulates the dice game Yac
 *   Human vs. Computer play (the current setup seems focused on Computer vs. itself for data generation and AI-assisted manual input).
 *   Advanced graphical user interface or animations.
 *   Network play.
+---
+### Feature Enhancement: Manual Category Control for AI Suggestions (UI)
+**Date:** 2025-05-18
+**Goal:** Allow users to manually select which scoring categories are available to the AI when requesting hold suggestions via UI checkboxes in [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0).
+**Benefit:** Provides finer-grained control for testing AI's suggestion logic under various scenarios by simulating different game states or category availability. This enhances the "manual dice input for hold suggestion" feature.
+**Status:** Spec and Pseudocode defined.

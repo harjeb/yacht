@@ -155,3 +155,21 @@
 * [2025-05-18 22:55:28] - [Debug Status Update: Applied Fix for CS1061 and CS1503] Added `using System.Linq;` to [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:2) to resolve CS1061. Verified that existing `Console.WriteLine` calls for arrays generally use `string.Join`, which should address CS1503 issues related to `Select` method on `diceCounts` and other array printing.
 * [2025-05-18 22:59:32] - [Debug Status Update: Cleaned Computer.cs, removed BOM]
 * [2025-05-18 23:05:43] - [Code Task Completion: Updated .NET Framework Version] Modified [`ComputerYacht/ComputerYacht.csproj`](ComputerYacht/ComputerYacht.csproj:0) to target .NET Framework v4.0 (from v2.0) and added a reference to `System.Core.dll` to resolve CS0234 compilation error (System.Linq not found).
+---
+### Current Focus: Manual Category Control Implementation (UI)
+**Date:** 2025-05-18
+**Task:** Define specification and pseudocode for UI and logic for manual control of available scoring categories for AI hold suggestions.
+**Files Involved:**
+*   [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0) (UI additions, logic for `btnGetHoldSuggestion_Click`, `InitializeNewGame`)
+*   [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0) (No change to `DecideDiceToHold` signature, consumes new input)
+*   [`ComputerYacht/Yacht.cs`](ComputerYacht/Yacht.cs:0) (No direct change, `GetPlayerAvailableCategories` bypassed in this flow)
+**Status:** Pseudocode generated. Preparing for Memory Bank update.
+* [2025-05-18 23:23:00] - [Architect Mode Task Completion: Update Architecture for Manual Category Control Feature]
+    *   **Task:** Architect mode reviewed and updated [`memory-bank/architecture.md`](memory-bank/architecture.md:0) to incorporate the new feature allowing users to manually control which scoring categories are available to the AI for hold suggestions via UI CheckBoxes.
+    *   **Details:**
+        *   Modified [`memory-bank/architecture.md`](memory-bank/architecture.md:0) to reflect new UI elements ([`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0) - 13 CheckBoxes), changes in `btnGetHoldSuggestion_Click` logic (reading CheckBoxes to build `availableCategories`, no longer calling `Yacht.GetPlayerAvailableCategories()`), and updated data flow diagrams and descriptions.
+    *   **Memory Bank Updates:**
+        *   [`memory-bank/architecture.md`](memory-bank/architecture.md:0) was updated with the new architectural design.
+        *   [`memory-bank/decisionLog.md`](memory-bank/decisionLog.md:0) was updated to log this architectural decision and its rationale.
+        *   [`memory-bank/activeContext.md`](memory-bank/activeContext.md:0) updated (this entry).
+    *   **Status:** The architecture documentation is now aligned with the specifications for the new manual category control feature.

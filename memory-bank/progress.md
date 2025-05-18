@@ -698,3 +698,43 @@ Successfully addressed compilation errors CS1061 and CS1503 in [`ComputerYacht/C
 
 **Summary of Completion (Phase 24):**
 Successfully updated the TargetFrameworkVersion in [`ComputerYacht/ComputerYacht.csproj`](ComputerYacht/ComputerYacht.csproj:0) from v2.0 to v4.0 and added a reference to `System.Core`. This should resolve the CS0234 compilation error related to `System.Linq`. All relevant Memory Bank files have been updated.
+---
+### Task: UI for Manual Category Control in AI Suggestions
+**Date:** 2025-05-18
+**Status:** Specification and Pseudocode Complete
+**Summary:**
+Defined UI changes (13 CheckBoxes) and logic modifications for [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0) to allow users to manually specify available scoring categories for the AI's "hold suggestion" feature. Confirmed no changes needed for [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0) method signature and no direct impact on [`ComputerYacht/Yacht.cs`](ComputerYacht/Yacht.cs:0) for this flow.
+**Deliverables:**
+*   [X] Detailed pseudocode for [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0).
+*   [X] Confirmation pseudocode for [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0) and [`ComputerYacht/Yacht.cs`](ComputerYacht/Yacht.cs:0).
+*   [X] Updates for Memory Bank files (`productContext.md`, `activeContext.md`, `decisionLog.md`, `progress.md`).
+**Next Steps:**
+*   User review of pseudocode and Memory Bank updates.
+*   Proceed to implementation if approved.
+---
+## Task: Review and Update Architecture for Manual Category Control Feature (Phase 25 - Architect Review & Update)
+
+**Overall Status:** COMPLETED
+**Timestamp:** 2025-05-18 23:23:00
+
+### Sub-tasks (Phase 25):
+
+1.  **Review User Request and `spec-pseudocode` Output for Manual Category Control:**
+    *   Status: COMPLETED
+    *   Notes: Understood the requirement for UI CheckBoxes to allow users to manually select available scoring categories for AI hold suggestions.
+2.  **Update `memory-bank/architecture.md`:**
+    *   Status: COMPLETED
+    *   Notes:
+        *   Modified overview, `frmMain.cs` description (to include 13 CheckBoxes and updated `btnGetHoldSuggestion_Click` logic for building `availableCategories` from CheckBoxes, noting `Yacht.GetPlayerAvailableCategories()` is bypassed), and data flow (Mermaid diagram and text) for the manual AI suggestion feature to reflect the new CheckBox controls and their impact on how `availableCategories` is determined.
+        *   Updated document summary.
+3.  **Update `memory-bank/decisionLog.md`:**
+    *   Status: COMPLETED
+    *   Notes: Added a new entry detailing the architectural changes for manual category control, rationale, and implications.
+4.  **Update `memory-bank/activeContext.md`:**
+    *   Status: COMPLETED
+    *   Notes: Added an entry summarizing the completion of this architectural task and the Memory Bank files updated.
+5.  **Update `memory-bank/progress.md` (This update):**
+    *   Status: COMPLETED
+
+**Summary of Completion (Phase 25):**
+The Architect mode has successfully updated the [`memory-bank/architecture.md`](memory-bank/architecture.md:0) document to reflect the new feature allowing users to manually control AI's available scoring categories via UI CheckBoxes. This involved detailing changes to the UI ([`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0)), the logic for determining `availableCategories` within the "get hold suggestion" feature, and updating the relevant data flow diagrams and descriptions. All relevant Memory Bank support files ([`memory-bank/decisionLog.md`](memory-bank/decisionLog.md:0), [`memory-bank/activeContext.md`](memory-bank/activeContext.md:0), [`memory-bank/progress.md`](memory-bank/progress.md:0)) have also been updated. The architecture documentation is now prepared for the implementation of this new UI-driven category control feature.
