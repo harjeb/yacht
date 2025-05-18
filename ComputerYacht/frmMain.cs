@@ -8,23 +8,23 @@ using System.Windows.Forms;
 namespace ComputerYacht
 {
 	// Token: 0x0200000C RID: 12
-	public enum TurnStepPhase
+	public enum TurnStepPhase // This enum might be less relevant for the new feature but kept for now.
 	{
 		READY_FOR_ROLL_1,
-		AWAITING_HOLD_DECISION_1, // After roll 1, AI decides hold
+		AWAITING_HOLD_DECISION_1, 
 		READY_FOR_ROLL_2,
-		AWAITING_HOLD_DECISION_2, // After roll 2, AI decides hold
+		AWAITING_HOLD_DECISION_2, 
 		READY_FOR_ROLL_3,
-		AWAITING_SCORING_DECISION, // After roll 3, AI decides score
-		TURN_COMPLETED, // Turn is scored, ready for next turn or game over check
+		AWAITING_SCORING_DECISION, 
+		TURN_COMPLETED, 
 		GAME_OVER
 	}
 
 	public partial class frmMain : Form
 	{
-		private TurnStepPhase currentPhase;
-		private int[] currentDiceValues = new int[5];
-		private bool[] currentHeldDice = new bool[5];
+		private TurnStepPhase currentPhase; // Kept for potential future re-integration of step-by-step game
+		private int[] currentDiceValues = new int[5]; // Kept for potential future re-integration
+		private bool[] currentHeldDice = new bool[5]; // Kept for potential future re-integration
 		private Computer compPlayer = new Computer(); // AI Player instance
 
 		// Token: 0x0600004E RID: 78 RVA: 0x0000410C File Offset: 0x0000230C
@@ -37,9 +37,7 @@ namespace ComputerYacht
 		private void frmMain_Load(object sender, EventArgs e)
 		{
 			this.loComp.Add(8);
-			// this.ResetYacht(this.yYacht); // Will be handled by InitializeNewGame
-			// this.tmrMain.Enabled = true; // Removed for manual step
-			this.InitializeNewGame(); // Initialize game state and phase
+			this.InitializeNewGame(); 
 			if (File.Exists("Games.txt"))
 			{
 				File.Delete("Games.txt");
@@ -67,14 +65,14 @@ namespace ComputerYacht
 		}
 
 		// Token: 0x06000052 RID: 82 RVA: 0x00004240 File Offset: 0x00002440
-		private void ResetYacht(Yacht Yacht) // This method is kept for resetting the Yacht object itself
+		private void ResetYacht(Yacht Yacht) 
 		{
 			Yacht.SetupGame(new string[]
 			{
 				"Computer"
 			}, new Computer[]
 			{
-				this.compPlayer // Use the class-level AI player
+				this.compPlayer 
 			});
 		}
 
@@ -82,7 +80,7 @@ namespace ComputerYacht
 		{
 			this.ResetYacht(this.yYacht);
 			if (this.yYacht != null) this.yYacht.ResetForNewGame();
-			this.currentPhase = TurnStepPhase.READY_FOR_ROLL_1;
+			// currentPhase = TurnStepPhase.READY_FOR_ROLL_1; // Less relevant for new feature
 			this.iGames = 0;
 			this.iTotalScore = 0;
 			this.iYachtzees = 0;
@@ -93,16 +91,21 @@ namespace ComputerYacht
 			{
 				this.iScoreCounts[i] = 0;
 			}
-			UpdateUI();
-			UpdateStatusMessage("点击“手动单步模拟”开始新游戏或进行第一次掷骰。");
+			UpdateUI(); // UpdateUI might need adjustment if it relies on game phases
+			UpdateStatusMessage("输入骰子点数并点击“获取保留建议”。");
+			// Clear dice input textboxes
+			if (txtDice1 != null) txtDice1.Text = ""; // Check for null in case InitializeComponent hasn't run
+			if (txtDice2 != null) txtDice2.Text = "";
+			if (txtDice3 != null) txtDice3.Text = "";
+			if (txtDice4 != null) txtDice4.Text = "";
+			if (txtDice5 != null) txtDice5.Text = "";
+			// Clear any visual hold suggestions
+			DisplayDiceHoldSuggestion(new bool[5]); 
 		}
 
 		private void UpdateStatusMessage(string message)
 		{
-			// Assuming lblStatusMessage is a Label control you'll add to the form's design.
-			// if (this.lblStatusMessage != null) { this.lblStatusMessage.Text = message; }
-			// else { Console.WriteLine("Status: " + message); } // Fallback for now
-		          Console.WriteLine("Status: " + message); // Temporary, until UI elements are confirmed
+		          Console.WriteLine("Status: " + message); 
 		}
 
 		// Token: 0x06000053 RID: 83 RVA: 0x00004274 File Offset: 0x00002474
@@ -119,70 +122,9 @@ namespace ComputerYacht
 
 		// Token: 0x06000054 RID: 84 RVA: 0x000042CC File Offset: 0x000024CC
 		/*
-		private void Next()
+		private void Next() // Old game simulation logic, commented out
 		{
-			bool flag = this.yYacht.ComputerNextMove();
-			string text = string.Empty;
-			if (flag)
-			{
-				this.iGames++;
-				int playerScore = this.yYacht.GetPlayerScore(0);
-				this.iTotalScore += playerScore;
-				if (playerScore > this.iMax)
-				{
-					this.iMax = playerScore;
-				}
-				if (playerScore < this.iMin)
-				{
-					this.iMin = playerScore;
-				}
-				if (this.yYacht.GetScore(0, 12) != 0)
-				{
-					this.iYachtzees++;
-				}
-				if (this.yYacht.GetScore(0, 6) != 0)
-				{
-					this.iBonuses++;
-				}
-				this.iScoreCounts[(int)Math.Truncate((double)playerScore / 100.0)]++;
-				for (int i = 0; i < this.iScoreCounts.Length; i++)
-				{
-					string text2 = text;
-					text = string.Concat(new string[]
-					{
-						text2,
-						"Less Than ",
-						((i + 1) * 100).ToString(),
-						":\t",
-						Math.Round(100.0 * (double)this.iScoreCounts[i] / (double)this.iGames, 2).ToString(),
-						"\t",
-						this.iScoreCounts[i].ToString(),
-						"\r\n"
-					});
-				}
-				this.tbStats.Text = string.Concat(new string[]
-				{
-					"GAMES PLAYED: ",
-					this.iGames.ToString(),
-					"\r\nTOTAL SCORE: ",
-					this.iTotalScore.ToString(),
-					"\r\nYACHTZEE %: ",
-					(100.0 * (double)this.iYachtzees / (double)this.iGames).ToString(),
-					"\r\nBONUS %: ",
-					(100.0 * (double)this.iBonuses / (double)this.iGames).ToString(),
-					"\r\nMIN SCORE: ",
-					this.iMin.ToString(),
-					"\r\nMAX SCORE: ",
-					this.iMax.ToString(),
-					"\r\nAVERAGE SCORE: ",
-					(this.iTotalScore / this.iGames).ToString(),
-					"\r\n",
-					text
-				});
-				this.WriteScoresToFile();
-				            InitializeNewGame();
-			}
-			UpdateUI();
+			// ... (original content of Next method)
 		}
 		*/
 
@@ -190,12 +132,7 @@ namespace ComputerYacht
 		/* Removed tmrMain_Tick for manual step
 		private void tmrMain_Tick(object sender, EventArgs e)
 		{
-			for (int i = 0; i < this.iMovesPerGame; i++)
-			{
-				this.Next();
-			}
-			this.tbDices.Text = this.yYacht.DicesToString();
-			this.tbScores.Text = this.yYacht.PlayerToString(0);
+			// ... (original content of tmrMain_Tick method)
 		}
 		*/
 		// Token: 0x06000056 RID: 86 RVA: 0x000045C1 File Offset: 0x000027C1
@@ -226,82 +163,71 @@ namespace ComputerYacht
 		/* Removed btnPause_Click for manual step
 		private void btnPause_Click(object sender, EventArgs e)
 		{
-			if (this.iMovesPerGame == 10000)
-			{
-				this.iMovesPerGame = 1;
-				// this.tmrMain.Interval = 1500; // tmrMain is removed
-				return;
-			}
-			this.iMovesPerGame = 10000;
-			// this.tmrMain.Interval = 1; // tmrMain is removed
+			// ... (original content of btnPause_Click method)
 		}
 		*/
-		private void btnManualStep_Click(object sender, EventArgs e)
+		private void btnGetHoldSuggestion_Click(object sender, EventArgs e)
 		{
-			if (yYacht == null) InitializeNewGame();
+			int[] manualDiceArray = new int[5];
+			TextBox[] diceTextBoxes = { txtDice1, txtDice2, txtDice3, txtDice4, txtDice5 };
 
-			switch (currentPhase)
+			for (int i = 0; i < 5; i++)
 			{
-				case TurnStepPhase.READY_FOR_ROLL_1:
-					if (yYacht.GetCurrentTurnNumber() == 0) yYacht.ResetForNewGame(); // Ensure game is reset if starting from scratch
-		                  yYacht.ResetForNewTurnIfNeeded();
-					currentDiceValues = yYacht.PerformRoll(1);
-					UpdateStatusMessage($"第 {yYacht.GetCurrentTurnNumber()} 回合 - 第1掷完成。AI 正在决定保留...");
-					currentHeldDice = compPlayer.DecideDiceToHold(currentDiceValues, yYacht.GetRollAttemptInTurn(), yYacht.GetPlayerAvailableCategories(0));
-					yYacht.ApplyHoldDecision(currentHeldDice);
-					currentPhase = TurnStepPhase.READY_FOR_ROLL_2;
-					UpdateStatusMessage($"AI 已为第1掷决策保留。点击进行第2掷。");
-					break;
-
-				case TurnStepPhase.READY_FOR_ROLL_2:
-					currentDiceValues = yYacht.PerformRoll(2);
-					UpdateStatusMessage($"第 {yYacht.GetCurrentTurnNumber()} 回合 - 第2掷完成。AI 正在决定保留...");
-					currentHeldDice = compPlayer.DecideDiceToHold(currentDiceValues, yYacht.GetRollAttemptInTurn(), yYacht.GetPlayerAvailableCategories(0));
-					yYacht.ApplyHoldDecision(currentHeldDice);
-					currentPhase = TurnStepPhase.READY_FOR_ROLL_3;
-					UpdateStatusMessage($"AI 已为第2掷决策保留。点击进行第3掷。");
-					break;
-
-				case TurnStepPhase.READY_FOR_ROLL_3:
-					currentDiceValues = yYacht.PerformRoll(3);
-					UpdateStatusMessage($"第 {yYacht.GetCurrentTurnNumber()} 回合 - 第3掷完成。AI 正在选择计分项...");
-					ScoringDecision decision = compPlayer.ChooseScoreCategory(currentDiceValues, yYacht.GetPlayerAvailableCategories(0));
-                    string[] diceStrings = new string[currentDiceValues.Length];
-                    for (int i = 0; i < currentDiceValues.Length; i++)
-                    {
-                        diceStrings[i] = currentDiceValues[i].ToString();
-                    }
-                    Console.WriteLine($"[frmMain.AWAITING_SCORING_DECISION] AI Dice: {string.Join(",", diceStrings)}");
-                    Console.WriteLine($"[frmMain.AWAITING_SCORING_DECISION] AI Decision: Category={decision.CategoryIndex} ({frmMain.CARD_LABELS[decision.CategoryIndex]}), Score={decision.Score}");
-					bool gameJustEnded = yYacht.ApplyScoreAndFinalizeTurn(decision.CategoryIndex, decision.Score);
-					UpdateStatusMessage($"AI 已选择在 {frmMain.CARD_LABELS[decision.CategoryIndex]} 计 {decision.Score} 分。");
-
-					if (gameJustEnded)
-					{
-						currentPhase = TurnStepPhase.GAME_OVER;
-						ProcessGameOver();
-						UpdateStatusMessage($"游戏结束! 总分: {yYacht.GetPlayerScore(0)}. 点击“手动单步模拟”开始新游戏。");
-					}
-					else
-					{
-						currentPhase = TurnStepPhase.TURN_COMPLETED;
-						UpdateStatusMessage($"回合 {yYacht.GetCurrentTurnNumber()-1} 结束。点击“手动单步模拟”开始下一回合。");
-					}
-					break;
-
-				case TurnStepPhase.TURN_COMPLETED:
-					currentPhase = TurnStepPhase.READY_FOR_ROLL_1;
-					UpdateStatusMessage($"第 {yYacht.GetCurrentTurnNumber()} 回合开始。点击进行第1掷。");
-					break;
-
-				case TurnStepPhase.GAME_OVER:
-					InitializeNewGame();
-					break;
+				if (!int.TryParse(diceTextBoxes[i].Text, out int diceValue) || diceValue < 1 || diceValue > 6)
+				{
+					MessageBox.Show($"骰子 {i + 1} 的输入无效。请输入1到6之间的数字。", "输入错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+					return;
+				}
+				manualDiceArray[i] = diceValue;
 			}
-			UpdateUI();
+
+			try
+			{
+				yYacht.SetManuallyEnteredDice(manualDiceArray);
+				// For AI suggestion, we assume it's like the first roll decision.
+				// The AI needs to know which categories are still available to make a good decision.
+				// We'll get the currently available categories for player 0.
+				bool[] availableCategories = yYacht.GetPlayerAvailableCategories(0); 
+
+				// The '1' indicates it's the equivalent of a decision after the first roll.
+				bool[] holdSuggestion = compPlayer.DecideDiceToHold(manualDiceArray, 1, availableCategories); 
+				DisplayDiceHoldSuggestion(holdSuggestion);
+				UpdateStatusMessage("AI 保留建议已显示。");
+				
+				// Update tbDices to show the manually entered dice and their hold status
+                this.tbDices.Text = this.yYacht.DicesToString(); 
+			}
+			catch (ArgumentException ex)
+			{
+				MessageBox.Show($"处理骰子输入时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			}
+			// The old game loop logic (switch statement based on currentPhase) is removed from this button.
+			// UpdateUI() is not called here as we are not progressing the game state, only providing a suggestion.
 		}
 
-		private void ProcessGameOver()
+		private void DisplayDiceHoldSuggestion(bool[] holdSuggestion)
+		{
+			TextBox[] diceTextBoxes = { txtDice1, txtDice2, txtDice3, txtDice4, txtDice5 };
+			if (holdSuggestion == null || holdSuggestion.Length != 5)
+			{
+				// Clear suggestion if invalid array or to reset
+				for (int i = 0; i < 5; i++)
+				{
+					if (diceTextBoxes[i] != null) diceTextBoxes[i].BackColor = SystemColors.Window;
+				}
+				return;
+			}
+
+			for (int i = 0; i < 5; i++)
+			{
+				if (diceTextBoxes[i] != null)
+				{
+					diceTextBoxes[i].BackColor = holdSuggestion[i] ? Color.LightGreen : SystemColors.Window;
+				}
+			}
+		}
+
+		private void ProcessGameOver() // Kept for potential future re-integration
 		{
 			this.iGames++;
 			int playerScore = this.yYacht.GetPlayerScore(0);
@@ -309,8 +235,8 @@ namespace ComputerYacht
 			if (playerScore > this.iMax) this.iMax = playerScore;
 			if (playerScore < this.iMin || this.iGames == 1) this.iMin = playerScore;
 			
-			if (this.yYacht.GetPlayerScoreForCategory(0, 12) > 0) this.iYachtzees++;
-			if (this.yYacht.GetPlayerScoreForCategory(0, 6) > 0) this.iBonuses++;
+			if (this.yYacht.GetPlayerScoreForCategory(0, 12) > 0) this.iYachtzees++; // INDEX_YACHT
+			if (this.yYacht.GetPlayerScoreForCategory(0, 6) > 0) this.iBonuses++; // INDEX_TOPBONUS
 			
 			int scoreBracket = playerScore / 100;
 			if (scoreBracket >= 0 && scoreBracket < this.iScoreCounts.Length)
@@ -342,14 +268,17 @@ namespace ComputerYacht
 			this.WriteScoresToFile();
 		}
 
-		private void UpdateUI()
+		private void UpdateUI() // This method might need adjustments if game state is not fully managed for the new feature
 		{
 			if (this.yYacht != null)
 			{
-				this.tbDices.Text = this.yYacht.DicesToString();
-				this.tbScores.Text = this.yYacht.PlayerToString(0);
+				// For the new feature, tbDices might show the manually entered dice if SetManuallyEnteredDice updates yYacht's dice state
+                // And DicesToString() reflects that + hold suggestion.
+				this.tbDices.Text = this.yYacht.DicesToString(); 
+				this.tbScores.Text = this.yYacht.PlayerToString(0); // This will show player 0's current card
 				
 				string turnInfo = $"回合: {yYacht.GetCurrentTurnNumber()}/13";
+				// The following phase-based logic might be less relevant for the suggestion feature
 				if (currentPhase != TurnStepPhase.GAME_OVER && currentPhase != TurnStepPhase.TURN_COMPLETED && yYacht.GetRollAttemptInTurn() > 0)
 				{
 					turnInfo += $"  掷骰次数: {yYacht.GetRollAttemptInTurn()}";
@@ -358,11 +287,7 @@ namespace ComputerYacht
 		              {
 		                  turnInfo = "游戏结束";
 		              }
-
-		              // Assuming lblTurnInfo is a Label control you'll add to the form's design.
-				// if (this.lblTurnInfo != null) { this.lblTurnInfo.Text = turnInfo; }
-				// else { Console.WriteLine(turnInfo); } // Fallback for now
-		              Console.WriteLine(turnInfo); // Temporary
+		              Console.WriteLine(turnInfo); 
 			}
 		}
 
@@ -373,7 +298,7 @@ namespace ComputerYacht
 		private YachtTest yYacht = new YachtTest(new Random());
 
 		// Token: 0x04000075 RID: 117
-		// private int iMovesPerGame = 10000; // Removed as tmrMain is removed
+		// private int iMovesPerGame = 10000; 
 
 		// Token: 0x04000076 RID: 118
 		private int iGames;

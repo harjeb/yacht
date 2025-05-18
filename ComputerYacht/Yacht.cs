@@ -610,6 +610,27 @@ namespace ComputerYacht
 			return text;
 		}
 
+		public void SetManuallyEnteredDice(int[] diceValuesFromUI)
+		{
+			if (diceValuesFromUI == null || diceValuesFromUI.Length != 5)
+			{
+				throw new ArgumentException("Dice values array must contain 5 elements.", nameof(diceValuesFromUI));
+			}
+
+			for (int i = 0; i < 5; i++)
+			{
+				if (diceValuesFromUI[i] < 1 || diceValuesFromUI[i] > 6)
+				{
+					throw new ArgumentOutOfRangeException(nameof(diceValuesFromUI), $"Dice value at index {i} must be between 1 and 6.");
+				}
+				this.iDicesValue[i] = diceValuesFromUI[i];
+				this.iDicesValueSorted[i] = diceValuesFromUI[i];
+			}
+			Array.Sort<int>(this.iDicesValueSorted);
+			this.ClearHeld(); // Clear any previous hold status
+			this.iRollIndex = 0; // Represents the first "roll" (user input)
+            // Do not change iCurrentTurnNumber or iPlayerIndex here, as this is for suggestion, not advancing game state.
+		}
 
 public const int NUM_CATEGORIES = 13; // Total number of standard scoring categories (excluding bonus)
 

@@ -1,4 +1,4 @@
-# Decision Log: ComputerYacht Analysis & Modifications
+<![CDATA[# Decision Log: ComputerYacht Analysis & Modifications
 
 **Date:** 2025-05-18
 
@@ -103,11 +103,11 @@ The task was to port the old, complex AI logic from obsolete methods (`HoldDice`
 [2025-05-18 19:31:35] - [Bug Fix Strategy: Remove Invalid CDATA Tags from Computer.cs]
 
 **Rationale:**
-The compilation log showed multiple errors (CS1525, CS1003, CS1002, CS1529, CS1022, CS8803, CS1733) pointing to invalid syntax at the beginning and end of `ComputerYacht/Computer.cs`. Inspection confirmed the presence of `&lt;![CDATA[` at the start and `]]&gt;` at the end of the file. These tags are not valid C# syntax and were the root cause of the compilation failure. The most direct fix was to remove these tags. This is consistent with previous similar issues in other files.
+The compilation log showed multiple errors (CS1525, CS1003, CS1002, CS1529, CS1022, CS8803, CS1733) pointing to invalid syntax at the beginning and end of `ComputerYacht/Computer.cs`. Inspection confirmed the presence of `<![CDATA[` at the start and `]]>` at the end of the file. These tags are not valid C# syntax and were the root cause of the compilation failure. The most direct fix was to remove these tags. This is consistent with previous similar issues in other files.
 
 **Details:**
 - Affected components/files: [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0)
-- Action: Used the `write_to_file` tool to rewrite the file, removing `&lt;![CDATA[` from the first line and `]]&gt;` from the last line. The `write_to_file` tool was chosen for its robustness in handling file boundary modifications, based on past experiences documented in the Memory Bank.
+- Action: Used the `write_to_file` tool to rewrite the file, removing `<![CDATA[` from the first line and `]]>` from the last line. The `write_to_file` tool was chosen for its robustness in handling file boundary modifications, based on past experiences documented in the Memory Bank.
 ---
 ### Decision (Debug)
 [2025-05-18 20:13:00] - [Bug Fix Strategy: Define NUM_CATEGORIES constant]
@@ -134,8 +134,48 @@ The previous placeholder logic for `DecideDiceToHold` was too simplistic, causin
 [2025-05-18 20:43:34] - [Bug Fix Strategy: Remove Invalid CDATA Tags from Computer.cs]
 
 **Rationale:**
-The compilation log showed multiple errors (CS1525, CS1003, CS1002, CS1529, CS1022, CS8803, CS1733) pointing to invalid syntax at the beginning and end of `ComputerYacht/Computer.cs`. Inspection confirmed the presence of `&lt;![CDATA[` at the start and `]]&gt;` at the end of the file. These tags are not valid C# syntax and were the root cause of the compilation failure. The most direct fix was to remove these tags. This is consistent with previous similar issues in other files and user instruction.
+The compilation log showed multiple errors (CS1525, CS1003, CS1002, CS1529, CS1022, CS8803, CS1733) pointing to invalid syntax at the beginning and end of `ComputerYacht/Computer.cs`. Inspection confirmed the presence of `<![CDATA[` at the start and `]]>` at the end of the file. These tags are not valid C# syntax and were the root cause of the compilation failure. The most direct fix was to remove these tags. This is consistent with previous similar issues in other files and user instruction.
 
 **Details:**
 - Affected components/files: [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0)
-- Action: Used the `write_to_file` tool to rewrite the file, removing `&lt;![CDATA[` from the first line and `]]&gt;` from the last line.
+- Action: Used the `write_to_file` tool to rewrite the file, removing `<![CDATA[` from the first line and `]]>` from the last line.
+---
+### Decision (Architecture Update)
+[2025-05-18 21:14:00] - 更新架构文档以包含手动骰子输入和AI建议功能。
+
+**Rationale:**
+响应用户提出的新功能需求（允许用户手动输入5个骰子点数，然后应用基于这些点数提供 AI 的保留建议），并确保架构文档准确反映预期的系统行为和组件交互。`spec-pseudocode` 模式已为此功能生成了规范和伪代码，这些信息也为本次架构更新提供了依据。
+
+**Implications/Details:**
+- [`memory-bank/architecture.md`](memory-bank/architecture.md:0) 已更新，主要修改包括：
+    - 在概述中加入了新功能的描述。
+    - 更新了对 [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0) 的描述，说明了新增的UI元素（5个骰子输入框，1个建议按钮）及其事件处理流程。
+    - 更新了对 [`ComputerYacht/Yacht.cs`](ComputerYacht/Yacht.cs:0) 的描述，加入了新的公共方法 `SetManuallyEnteredDice()` 用于接收手动输入的骰子。
+    - 更新了对 [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0) 的描述，说明其 `DecideDiceToHold()` 方法将如何处理来自手动设置的骰子。
+    - 新增了一个专门描述此功能数据流和控制流的子章节，并包含了一个Mermaid序列图。
+    - 更新了文档的总结部分。
+- 此更新为后续开发和模式（如 `code` 模式）实现此功能提供了清晰的架构指导。
+---
+### Decision (Code Implementation)
+[2025-05-18 21:22:00] - Tooling Choice: `write_to_file` over `apply_diff` for complex/multi-part file modifications.
+
+**Rationale:**
+During the implementation of the "Manual Dice Input & AI Suggestion" feature, multiple attempts to use `apply_diff` for modifications to [`ComputerYacht/frmMain.Designer.cs`](ComputerYacht/frmMain.Designer.cs:0) and [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0) failed due to persistent "Diff block is malformed: marker '=======' found in your diff content" errors. Despite several attempts to correct the diff format, the issue persisted, likely due to the complexity of the changes involving multiple insertion points and renamings.
+
+To ensure reliable and timely completion of the file modifications, the strategy was switched to using `read_file` to get the current content, manually constructing the complete desired file content in memory, and then using `write_to_file` to overwrite the target file.
+
+**Details:**
+- Affected files: [`ComputerYacht/frmMain.Designer.cs`](ComputerYacht/frmMain.Designer.cs:0), [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0).
+- Alternative considered: Continued attempts to debug `apply_diff` formatting, breaking down diffs into smaller pieces.
+- Outcome: Using `write_to_file` proved successful and allowed the task to proceed efficiently. While `apply_diff` is preferred for surgical changes, `write_to_file` is a more robust fallback for complex or problematic diffs.
+]]>
+---
+### Decision (Debug)
+[2025-05-18 21:29:02] - [Bug Fix Strategy: Remove Invalid CDATA Tags from Multiple Files]
+
+**Rationale:**
+The compilation log showed multiple errors (CS1519, CS1525, CS1003, CS1001, CS1002, CS1529) pointing to invalid syntax at the beginning and/or end of `ComputerYacht/Yacht.cs`, `ComputerYacht/frmMain.Designer.cs`, and `ComputerYacht/frmMain.cs`. Inspection of these files (and similar issues in Memory Bank files) confirmed the presence of `&lt;![CDATA[` at the start and `]]&gt;` at the end of these code files. These tags are not valid C# syntax and were the root cause of the compilation failures. The most direct and previously successful fix strategy for such issues is to remove these tags.
+
+**Details:**
+- Affected components/files: [`ComputerYacht/Yacht.cs`](ComputerYacht/Yacht.cs:0), [`ComputerYacht/frmMain.Designer.cs`](ComputerYacht/frmMain.Designer.cs:0), [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0)
+- Action: Used the `write_to_file` tool to rewrite each file, removing the `&lt;![CDATA[` and `]]&gt;` tags from their respective beginnings and endings. The `write_to_file` tool was chosen for its robustness in handling file boundary modifications, consistent with past successful interventions documented in the Memory Bank.

@@ -22,14 +22,19 @@
 			this.tbStats = new global::System.Windows.Forms.TextBox();
 			this.btnCopy = new global::System.Windows.Forms.Button();
 			// this.btnPause = new global::System.Windows.Forms.Button(); // Removed for manual step
-			this.btnManualStep = new global::System.Windows.Forms.Button();
+			this.btnGetHoldSuggestion = new global::System.Windows.Forms.Button();
+			this.txtDice1 = new System.Windows.Forms.TextBox();
+			this.txtDice2 = new System.Windows.Forms.TextBox();
+			this.txtDice3 = new System.Windows.Forms.TextBox();
+			this.txtDice4 = new System.Windows.Forms.TextBox();
+			this.txtDice5 = new System.Windows.Forms.TextBox();
 			base.SuspendLayout();
 			this.tbDices.Anchor = (global::System.Windows.Forms.AnchorStyles.Top | global::System.Windows.Forms.AnchorStyles.Bottom | global::System.Windows.Forms.AnchorStyles.Left);
 			this.tbDices.Font = new global::System.Drawing.Font("Microsoft Sans Serif", 14f, global::System.Drawing.FontStyle.Regular, global::System.Drawing.GraphicsUnit.Point, 0);
 			this.tbDices.Location = new global::System.Drawing.Point(12, 12);
 			this.tbDices.Multiline = true;
 			this.tbDices.Name = "tbDices";
-			this.tbDices.Size = new global::System.Drawing.Size(164, 456);
+			this.tbDices.Size = new global::System.Drawing.Size(164, 410); // Adjusted size to make space for new textboxes
 			this.tbDices.TabIndex = 0;
 			this.tbScores.Anchor = (global::System.Windows.Forms.AnchorStyles.Top | global::System.Windows.Forms.AnchorStyles.Bottom | global::System.Windows.Forms.AnchorStyles.Left);
 			this.tbScores.Location = new global::System.Drawing.Point(182, 12);
@@ -63,18 +68,58 @@
 			// this.btnPause.Text = "(Un)Slow";
 			// this.btnPause.UseVisualStyleBackColor = true;
 			// this.btnPause.Click += new global::System.EventHandler(this.btnPause_Click);
-			this.btnManualStep.Anchor = (global::System.Windows.Forms.AnchorStyles.Bottom | global::System.Windows.Forms.AnchorStyles.Left);
-			this.btnManualStep.Location = new global::System.Drawing.Point(12, 476);
-			this.btnManualStep.Name = "btnManualStep";
-			this.btnManualStep.Size = new global::System.Drawing.Size(150, 23); // Adjusted size for longer text
-			this.btnManualStep.TabIndex = 5; // Next available tab index
-			this.btnManualStep.Text = "手动单步模拟";
-			this.btnManualStep.UseVisualStyleBackColor = true;
-			this.btnManualStep.Click += new global::System.EventHandler(this.btnManualStep_Click);
+			this.btnGetHoldSuggestion.Anchor = (global::System.Windows.Forms.AnchorStyles.Bottom | global::System.Windows.Forms.AnchorStyles.Left);
+			this.btnGetHoldSuggestion.Location = new global::System.Drawing.Point(192, 440); // Adjusted location
+			this.btnGetHoldSuggestion.Name = "btnGetHoldSuggestion";
+			this.btnGetHoldSuggestion.Size = new global::System.Drawing.Size(150, 23); 
+			this.btnGetHoldSuggestion.TabIndex = 5; 
+			this.btnGetHoldSuggestion.Text = "获取保留建议";
+			this.btnGetHoldSuggestion.UseVisualStyleBackColor = true;
+			this.btnGetHoldSuggestion.Click += new global::System.EventHandler(this.btnGetHoldSuggestion_Click);
+			// 
+			// txtDice1
+			// 
+			this.txtDice1.Location = new global::System.Drawing.Point(12, 440);
+			this.txtDice1.Name = "txtDice1";
+			this.txtDice1.Size = new global::System.Drawing.Size(30, 20);
+			this.txtDice1.TabIndex = 6;
+			// 
+			// txtDice2
+			// 
+			this.txtDice2.Location = new global::System.Drawing.Point(48, 440);
+			this.txtDice2.Name = "txtDice2";
+			this.txtDice2.Size = new global::System.Drawing.Size(30, 20);
+			this.txtDice2.TabIndex = 7;
+			// 
+			// txtDice3
+			// 
+			this.txtDice3.Location = new global::System.Drawing.Point(84, 440);
+			this.txtDice3.Name = "txtDice3";
+			this.txtDice3.Size = new global::System.Drawing.Size(30, 20);
+			this.txtDice3.TabIndex = 8;
+			// 
+			// txtDice4
+			// 
+			this.txtDice4.Location = new global::System.Drawing.Point(120, 440);
+			this.txtDice4.Name = "txtDice4";
+			this.txtDice4.Size = new global::System.Drawing.Size(30, 20);
+			this.txtDice4.TabIndex = 9;
+			// 
+			// txtDice5
+			// 
+			this.txtDice5.Location = new global::System.Drawing.Point(156, 440);
+			this.txtDice5.Name = "txtDice5";
+			this.txtDice5.Size = new global::System.Drawing.Size(30, 20);
+			this.txtDice5.TabIndex = 10;
 			base.AutoScaleDimensions = new global::System.Drawing.SizeF(6f, 13f);
 			base.AutoScaleMode = global::System.Windows.Forms.AutoScaleMode.Font;
 			base.ClientSize = new global::System.Drawing.Size(730, 512);
-			base.Controls.Add(this.btnManualStep);
+			base.Controls.Add(this.txtDice5);
+			base.Controls.Add(this.txtDice4);
+			base.Controls.Add(this.txtDice3);
+			base.Controls.Add(this.txtDice2);
+			base.Controls.Add(this.txtDice1);
+			base.Controls.Add(this.btnGetHoldSuggestion);
 			// base.Controls.Add(this.btnPause); // Removed for manual step
 			base.Controls.Add(this.btnCopy);
 			base.Controls.Add(this.tbStats);
@@ -109,6 +154,11 @@
 
 		// Token: 0x04000086 RID: 134
 		// private global::System.Windows.Forms.Button btnPause; // Removed for manual step
-		private global::System.Windows.Forms.Button btnManualStep;
+		private global::System.Windows.Forms.Button btnGetHoldSuggestion;
+		private System.Windows.Forms.TextBox txtDice1;
+		private System.Windows.Forms.TextBox txtDice2;
+		private System.Windows.Forms.TextBox txtDice3;
+		private System.Windows.Forms.TextBox txtDice4;
+		private System.Windows.Forms.TextBox txtDice5;
 	}
 }

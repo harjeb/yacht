@@ -73,3 +73,31 @@
 * [2025-05-18 20:38:00] - [Code Update: `DecideDiceToHold` Improvement] Completed implementation of a new heuristic-based dice holding strategy in `Computer.cs`. The AI should now make more intelligent decisions when holding dice, aiming for better scores and combinations beyond just "Chance".
 ]]>
 * [2025-05-18 20:43:44] - [Debug Status Update: Compilation Errors Fixed in Computer.cs] Removed invalid CDATA tags from the beginning and end of [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0) to resolve CS1525, CS1003, CS1002, CS1529, CS1022, CS8803, CS1733 errors.
+* [2025-05-18 21:14:30] - [Architect Mode Task Completion: Update Architecture for Manual Dice Input Feature]
+    *   **Task:** Architect mode reviewed and updated [`memory-bank/architecture.md`](memory-bank/architecture.md:0) to incorporate the new feature allowing users to manually input 5 dice values and receive AI-driven hold suggestions.
+    *   **Details:**
+        *   Modified [`memory-bank/architecture.md`](memory-bank/architecture.md:0) to reflect changes in UI ([`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0)), game logic ([`ComputerYacht/Yacht.cs`](ComputerYacht/Yacht.cs:0)), and AI ([`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0)).
+        *   Added a new data flow diagram (Mermaid) and description for the manual dice input feature.
+        *   Updated the document's overview and summary sections.
+    *   **Memory Bank Updates:**
+        *   [`memory-bank/architecture.md`](memory-bank/architecture.md:0) was updated with the new architectural design.
+        *   [`memory-bank/decisionLog.md`](memory-bank/decisionLog.md:0) was updated to log this architectural decision and its rationale.
+    *   **Status:** The architecture documentation is now aligned with the specifications for the new manual dice input feature.
+* [2025-05-18 21:22:00] - [Code Task Completion: Implement Manual Dice Input & AI Suggestion Feature]
+    *   **Task:** Implemented the feature allowing users to manually input 5 dice values and receive AI-driven hold suggestions.
+    *   **Details:**
+        *   **[`ComputerYacht/frmMain.Designer.cs`](ComputerYacht/frmMain.Designer.cs:0):** Added five `TextBox` controls (`txtDice1` to `txtDice5`) for dice input. Renamed `btnManualStep` to `btnGetHoldSuggestion` and updated its text to "获取保留建议".
+        *   **[`ComputerYacht/Yacht.cs`](ComputerYacht/Yacht.cs:0):** Added `public void SetManuallyEnteredDice(int[] diceValuesFromUI)` to handle manual dice input, validation, and internal state update.
+        *   **[`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0):**
+            *   Renamed `btnManualStep_Click` to `btnGetHoldSuggestion_Click`.
+            *   Modified `btnGetHoldSuggestion_Click` to read from new TextBoxes, validate, call `yYacht.SetManuallyEnteredDice()`, call `compPlayer.DecideDiceToHold()`, and then call `DisplayDiceHoldSuggestion()`.
+            *   Implemented `private void DisplayDiceHoldSuggestion(bool[] holdSuggestion)` to change `TextBox` background colors.
+            *   Updated `InitializeNewGame()` to clear new TextBoxes and suggestion display.
+            *   Removed old step-through game logic from the button.
+    *   **Memory Bank Updates:**
+        *   [`memory-bank/progress.md`](memory-bank/progress.md:0) updated.
+        *   [`memory-bank/activeContext.md`](memory-bank/activeContext.md:0) updated (this entry).
+        *   [`memory-bank/decisionLog.md`](memory-bank/decisionLog.md:0) to be updated next.
+    *   **Status:** Feature implemented. Code changes applied to relevant files.
+]]>
+* [2025-05-18 21:28:43] - [Debug Status Update: Compilation Errors Fixed] Removed invalid CDATA tags from the beginning and end of `ComputerYacht/Yacht.cs`, `ComputerYacht/frmMain.Designer.cs`, and `ComputerYacht/frmMain.cs` to resolve CS1519, CS1525, CS1003, CS1001, CS1002, and CS1529 compilation errors.

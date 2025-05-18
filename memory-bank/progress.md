@@ -321,7 +321,7 @@ The `ChooseScoreCategory` method in `Computer.cs` has been updated to incorporat
     *   Notes: Identified errors CS1525, CS1003, CS1002, CS1529, CS1022, CS8803, CS1733 in `ComputerYacht/Computer.cs`.
 2.  **Inspect `Computer.cs`:**
     *   Status: COMPLETED
-    *   Notes: Confirmed presence of `&lt;![CDATA[` at the beginning and `]]&gt;` at the end of the file.
+    *   Notes: Confirmed presence of `<![CDATA[` at the beginning and `]]>` at the end of the file.
 3.  **Fix `Computer.cs`:**
     *   Status: COMPLETED
     *   Notes: Removed invalid CDATA tags using `write_to_file`.
@@ -400,7 +400,7 @@ The `DecideDiceToHold` method in [`ComputerYacht/Computer.cs`](ComputerYacht/Com
     *   Notes: Identified errors CS1525, CS1003, CS1002, CS1529, CS1022, CS8803, CS1733 in [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0).
 2.  **Inspect `Computer.cs`:**
     *   Status: COMPLETED
-    *   Notes: Confirmed presence of `&lt;![CDATA[` at the beginning and `]]&gt;` at the end of the file.
+    *   Notes: Confirmed presence of `<![CDATA[` at the beginning and `]]>` at the end of the file.
 3.  **Fix `Computer.cs`:**
     *   Status: COMPLETED
     *   Notes: Removed invalid CDATA tags using `write_to_file`.
@@ -413,3 +413,96 @@ The `DecideDiceToHold` method in [`ComputerYacht/Computer.cs`](ComputerYacht/Com
 
 **Summary of Completion (Phase 13):**
 Successfully removed invalid CDATA tags from [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0), which were causing multiple compilation errors. All relevant Memory Bank files have been updated.
+---
+## Task: Update Architecture for Manual Dice Input & AI Suggestion Feature (Phase 14 - Architect Review & Update)
+
+**Overall Status:** COMPLETED
+**Timestamp:** 2025-05-18 21:14:43
+
+### Sub-tasks (Phase 14):
+
+1.  **Review User Request and `spec-pseudocode` Output:**
+    *   Status: COMPLETED
+    *   Notes: Understood the requirement for users to manually input 5 dice values and receive AI hold suggestions. Referenced existing Memory Bank context.
+2.  **Update `memory-bank/architecture.md`:**
+    *   Status: COMPLETED
+    *   Notes:
+        *   Modified existing sections for [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0), [`ComputerYacht/Yacht.cs`](ComputerYacht/Yacht.cs:0), and [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0) to reflect new UI elements, methods (e.g., `SetManuallyEnteredDice`), and interactions.
+        *   Added a new section "3.1. 数据流和控制流 (手动输入骰子获取AI建议)" including a Mermaid sequence diagram and detailed textual description of the new workflow.
+        *   Updated document overview and summary.
+3.  **Update `memory-bank/decisionLog.md`:**
+    *   Status: COMPLETED
+    *   Notes: Added a new entry detailing the architectural changes, rationale, and implications for the manual dice input feature.
+4.  **Update `memory-bank/activeContext.md`:**
+    *   Status: COMPLETED
+    *   Notes: Added an entry summarizing the completion of this architectural task and the Memory Bank files updated.
+5.  **Update `memory-bank/progress.md` (This update):**
+    *   Status: COMPLETED
+
+**Summary of Completion (Phase 14):**
+The Architect mode has successfully updated the [`memory-bank/architecture.md`](memory-bank/architecture.md:0) document to reflect the new feature allowing users to manually input 5 dice values and receive AI-driven hold suggestions. This involved detailing changes to the UI, game logic, and AI components, as well as outlining the new data and control flow. All relevant Memory Bank support files ([`memory-bank/decisionLog.md`](memory-bank/decisionLog.md:0), [`memory-bank/activeContext.md`](memory-bank/activeContext.md:0), [`memory-bank/progress.md`](memory-bank/progress.md:0)) have also been updated to document this task's completion and the changes made. The architecture documentation is now prepared for the implementation of this new feature.
+---
+## Task: Implement Manual Dice Input & AI Suggestion Feature (Phase 15 - Code Implementation)
+
+**Overall Status:** COMPLETED
+**Timestamp:** 2025-05-18 21:21:00
+
+### Sub-tasks (Phase 15):
+
+1.  **Modify `ComputerYacht/frmMain.Designer.cs`:**
+    *   Status: COMPLETED
+    *   Notes: Added five `TextBox` controls (`txtDice1` to `txtDice5`) for dice input. Renamed `btnManualStep` to `btnGetHoldSuggestion` and updated its text to "获取保留建议". Adjusted control layout.
+2.  **Modify `ComputerYacht/Yacht.cs`:**
+    *   Status: COMPLETED
+    *   Notes: Added public method `SetManuallyEnteredDice(int[] diceValuesFromUI)` to receive manually entered dice, validate them, update internal dice state, clear holds, and set roll index to 0.
+3.  **Modify `ComputerYacht/frmMain.cs`:**
+    *   Status: COMPLETED
+    *   Notes:
+        *   Renamed `btnManualStep_Click` to `btnGetHoldSuggestion_Click`.
+        *   Modified `btnGetHoldSuggestion_Click` to:
+            *   Remove old step-through game logic.
+            *   Read dice values from the new `TextBox` controls and validate input (1-6).
+            *   Call `yYacht.SetManuallyEnteredDice()` with the validated dice.
+            *   Call `compPlayer.DecideDiceToHold()` using the manual dice, roll number 1, and available categories.
+            *   Call the new `DisplayDiceHoldSuggestion()` method.
+        *   Implemented `private void DisplayDiceHoldSuggestion(bool[] holdSuggestion)` to update `TextBox` background colors based on AI suggestion.
+        *   Updated `InitializeNewGame()` to clear the new dice `TextBox` controls and reset hold suggestion display.
+4.  **Update Memory Bank - `progress.md` (This update):**
+    *   Status: COMPLETED
+5.  **Update Memory Bank - `activeContext.md`:**
+    *   Status: PENDING
+6.  **Update Memory Bank - `decisionLog.md`:**
+    *   Status: PENDING
+
+**Summary of Completion (Phase 15):**
+Successfully implemented the feature allowing users to manually input 5 dice values and receive AI-driven hold suggestions. This involved UI changes in `frmMain.Designer.cs`, logic changes in `Yacht.cs` to accept manual dice, and significant modifications to `frmMain.cs` to handle the new input, call the AI, and display suggestions. The old step-through game simulation logic tied to the button has been replaced.
+]]>
+---
+## Task: Fix Compilation Errors due to CDATA tags (Phase 16 - Debugging)
+
+**Overall Status:** COMPLETED
+**Timestamp:** 2025-05-18 21:28:53
+
+### Sub-tasks (Phase 16):
+
+1.  **Analyze Compilation Log:**
+    *   Status: COMPLETED
+    *   Notes: Identified errors CS1519, CS1525, CS1003, CS1001, CS1002, CS1529 in `ComputerYacht/Yacht.cs`, `ComputerYacht/frmMain.Designer.cs`, and `ComputerYacht/frmMain.cs`.
+2.  **Inspect and Fix `ComputerYacht/Yacht.cs`:**
+    *   Status: COMPLETED
+    *   Notes: Removed `<![CDATA[` and `]]>` tags using `write_to_file`.
+3.  **Inspect and Fix `ComputerYacht/frmMain.Designer.cs`:**
+    *   Status: COMPLETED
+    *   Notes: Removed `<![CDATA[` and `]]>` tags using `write_to_file`.
+4.  **Inspect and Fix `ComputerYacht/frmMain.cs`:**
+    *   Status: COMPLETED
+    *   Notes: Removed `<![CDATA[` and `]]>` tags using `write_to_file`.
+5.  **Update Memory Bank - `activeContext.md`:**
+    *   Status: COMPLETED
+6.  **Update Memory Bank - `progress.md` (This update):**
+    *   Status: COMPLETED
+7.  **Update Memory Bank - `decisionLog.md`:**
+    *   Status: PENDING
+
+**Summary of Completion (Phase 16):**
+Successfully removed invalid CDATA tags from `ComputerYacht/Yacht.cs`, `ComputerYacht/frmMain.Designer.cs`, and `ComputerYacht/frmMain.cs`. These tags were causing multiple compilation errors. Memory Bank (`activeContext.md`, `progress.md`) updated.
