@@ -101,3 +101,57 @@
     *   **Status:** Feature implemented. Code changes applied to relevant files.
 ]]>
 * [2025-05-18 21:28:43] - [Debug Status Update: Compilation Errors Fixed] Removed invalid CDATA tags from the beginning and end of `ComputerYacht/Yacht.cs`, `ComputerYacht/frmMain.Designer.cs`, and `ComputerYacht/frmMain.cs` to resolve CS1519, CS1525, CS1003, CS1001, CS1002, and CS1529 compilation errors.
+* [2025-05-18 22:15:00] - [Spec-Pseudocode Task: Enhance Manual Dice Input AI Suggestion]
+    *   **Task:** Define specifications and generate pseudocode to enhance the "manual dice input for AI hold suggestion" feature. The AI's suggestion should now consider the current roll number (1, 2, or 3) and the player's current upper section score, in addition to the dice values and available categories.
+    *   **Details:**
+        *   **UI Changes ([`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0)):**
+            *   Add `cmbRollNumber` (ComboBox or NumericUpDown) for user to select the current roll number (1-3).
+            *   Add `txtCurrentUpperScore` (TextBox) for user to input their current upper section total score.
+        *   **Logic Changes ([`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0)):**
+            *   `btnGetHoldSuggestion_Click` to read values from `cmbRollNumber` and `txtCurrentUpperScore`.
+            *   Pass these new values (`rollNumber`, `currentUpperScore`) to `compPlayer.DecideDiceToHold()`.
+        *   **Logic Changes ([`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0)):**
+            *   Modify `DecideDiceToHold` method signature to accept `int rollNumber` and `int currentUpperScore`.
+            *   Update internal heuristic logic in `DecideDiceToHold` to utilize `rollNumber` and `currentUpperScore` for more intelligent hold decisions (e.g., prioritizing upper section completion if bonus is viable and roll number is low).
+        *   **Logic Changes ([`ComputerYacht/Yacht.cs`](ComputerYacht/Yacht.cs:0)):**
+            *   `SetManuallyEnteredDice` method likely requires no significant changes for this feature, as `rollNumber` is passed directly to the `Computer` AI by `frmMain.cs`.
+    *   **Pseudocode:** Generated for `frmMain.cs`, `Computer.cs`, and `Yacht.cs` to reflect these enhancements.
+    *   **Memory Bank Updates:**
+        *   [`memory-bank/productContext.md`](memory-bank/productContext.md:0) updated to describe the enhanced feature and new UI controls.
+        *   [`memory-bank/activeContext.md`](memory-bank/activeContext.md:0) updated (this entry).
+        *   [`memory-bank/architecture.md`](memory-bank/architecture.md:0) to be updated with new UI elements and data flow.
+        *   [`memory-bank/decisionLog.md`](memory-bank/decisionLog.md:0) to be updated with design choices.
+        *   [`memory-bank/progress.md`](memory-bank/progress.md:0) to be updated to reflect spec completion for this feature.
+    *   **Status:** Specification and pseudocode generation complete. Pending updates to other Memory Bank files.
+* [2025-05-18 22:22:00] - [Architect Mode Task Completion: Review Architecture for Enhanced Manual Dice Input AI Suggestion]
+    *   **Task:** Architect mode reviewed [`memory-bank/architecture.md`](memory-bank/architecture.md:0) to ensure it accurately reflects the latest enhancements to the "manual dice input AI suggestion" feature, specifically the inclusion of roll number and current upper score as context for the AI.
+    *   **Details:**
+        *   Confirmed that [`memory-bank/architecture.md`](memory-bank/architecture.md:0) (last updated 2025-05-18 22:15:00 by `spec-pseudocode` mode) correctly details the new UI elements (`cmbRollNumber`, `txtCurrentUpperScore`) in [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0), the updated `DecideDiceToHold` method signature in [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0), and the associated data flow.
+        *   No modifications to [`memory-bank/architecture.md`](memory-bank/architecture.md:0) were needed as it was already aligned with the specifications.
+    *   **Memory Bank Updates:**
+        *   [`memory-bank/progress.md`](memory-bank/progress.md:0) updated to log completion of this review task.
+        *   [`memory-bank/activeContext.md`](memory-bank/activeContext.md:0) updated (this entry).
+    *   **Status:** Architecture review complete. The architecture document is confirmed to be up-to-date with the latest feature specifications.
+* [2025-05-18 22:25:00] - [Code Task: Enhance Manual Dice Input AI Suggestion with Context (Implementation)]
+    *   **Task:** Implemented UI and logic changes to enhance the "manual dice input for AI hold suggestion" feature. The AI now considers the current roll number and upper section score.
+    *   **Details:**
+        *   **[`ComputerYacht/frmMain.Designer.cs`](ComputerYacht/frmMain.Designer.cs:0):** Added `cmbRollNumber` (ComboBox), `txtCurrentUpperScore` (TextBox), and associated labels. Adjusted layout.
+        *   **[`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0):** Modified `DecideDiceToHold` signature to `(int[] currentDiceValues, int rollNumber, bool[] availableCategories, int currentUpperScore)`. Added logic to use `rollNumber` (always hold all on roll 3) and `currentUpperScore` (prioritize upper section if bonus is viable and score is not too high).
+        *   **[`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0):**
+            *   In `btnGetHoldSuggestion_Click`: Read `rollNumber` from `cmbRollNumber` and `currentUpperScore` from `txtCurrentUpperScore`. Added input validation for these new fields. Passed these values to `compPlayer.DecideDiceToHold()`.
+            *   In `InitializeNewGame()`: Added logic to reset `cmbRollNumber` to "1" and `txtCurrentUpperScore` to "0".
+    *   **Status:** Code implementation complete for all specified files.
+* [2025-05-18 22:36:00] - [Code Task: Fix AI Straight Holding Logic]
+    *   **Task:** Addressed a bug in [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0) where the `DecideDiceToHold` method would suggest holding for Small or Large Straights even if those categories were no longer available.
+    *   **Details:**
+        *   Modified `DecideDiceToHold` in [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:113) to check `availableCategories[Yacht.INDEX_LGESTRAIGHT]` before evaluating large straights.
+        *   Modified `DecideDiceToHold` in [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:120) to check `availableCategories[Yacht.INDEX_SMLSTRAIGHT]` before evaluating small straights.
+    *   **Status:** Code changes applied and verified. Memory Bank updated.
+* [2025-05-18 22:40:00] - [Code Task: Add Debug Logging to AI Straight Logic]
+    *   **Task:** Added detailed `Console.WriteLine()` debug logging to `DecideDiceToHold` and related private helper methods (`IsSmallStraight`, `IsLargeStraight`, `MarkStraightDice`) in [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0).
+    *   **Details:** Logged method entries, key parameters (dice values, roll number, category availability, upper score), strategy evaluation steps, dice counts, specific logic for straights (availability checks, detection results), and final hold decisions.
+    *   **Status:** Debug logging implemented in [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0).
+* [2025-05-18 22:48:00] - [Debug Status Update: Fix Confirmation] Applied fixes for CS1503 in `Computer.cs` by ensuring `Console.WriteLine` uses `string.Join` for array types and fixed CS0649 in `frmMain.cs` by initializing `currentPhase` at declaration.
+* [2025-05-18 22:55:28] - [Debug Status Update: Applied Fix for CS1061 and CS1503] Added `using System.Linq;` to [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:2) to resolve CS1061. Verified that existing `Console.WriteLine` calls for arrays generally use `string.Join`, which should address CS1503 issues related to `Select` method on `diceCounts` and other array printing.
+* [2025-05-18 22:59:32] - [Debug Status Update: Cleaned Computer.cs, removed BOM]
+* [2025-05-18 23:05:43] - [Code Task Completion: Updated .NET Framework Version] Modified [`ComputerYacht/ComputerYacht.csproj`](ComputerYacht/ComputerYacht.csproj:0) to target .NET Framework v4.0 (from v2.0) and added a reference to `System.Core.dll` to resolve CS0234 compilation error (System.Linq not found).

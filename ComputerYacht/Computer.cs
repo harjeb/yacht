@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace ComputerYacht
 {
@@ -35,69 +36,148 @@ namespace ComputerYacht
 		}
 
         #region New AI Decision Methods
-        public bool[] DecideDiceToHold(int[] currentDiceValues, int rollNumber, bool[] availableCategories)
+        public bool[] DecideDiceToHold(int[] currentDiceValues, int rollNumber, bool[] availableCategories, int currentUpperScore)
         {
-            // Heuristic-based dice holding strategy.
-            bool[] diceToHold = new bool[5]; 
+            Console.WriteLine($"DecideDiceToHold START");
+            Console.WriteLine($"Dice: [{string.Join(", ", currentDiceValues)}]");
+            Console.WriteLine($"Roll Number: {rollNumber}");
+            Console.WriteLine($"Small Straight Available: {availableCategories[Yacht.INDEX_SMLSTRAIGHT]}, Large Straight Available: {availableCategories[Yacht.INDEX_LGESTRAIGHT]}");
+            Console.WriteLine($"Current Upper Score: {currentUpperScore}");
 
-            if (rollNumber == 3) 
+            // Heuristic-based dice holding strategy.
+            bool[] diceToHold = new bool[5];
+
+            if (rollNumber == 3)
             {
+                Console.WriteLine("Roll 3, holding all dice.");
                 for (int i = 0; i < 5; i++) diceToHold[i] = true;
-                return diceToHold;
+                Console.WriteLine($"Final Hold Decision: [{string.Join(", ", diceToHold)}]");
+                return diceToHold; // Always hold all on 3rd roll
             }
 
             int[] diceCounts = CountOccurrences(currentDiceValues);
+            Console.WriteLine($"Dice Counts: {{{string.Join(", ", diceCounts.Select((count, index) => $"{(index + 1)}:{count}"))}}}");
+
+            // Strategy adjustment based on currentUpperScore and rollNumber
+            bool tryForUpperBonus = currentUpperScore < 63;
+            int upperBonusThreshold = 45; // If upper score is already high, be less aggressive for bonus
+
+            // If trying for upper bonus and not too late in rolls
+            if (tryForUpperBonus && currentUpperScore < upperBonusThreshold && rollNumber <= 2)
+            {
+                // Prioritize holding dice that contribute to needed upper categories
+                for (int val = 6; val >= 1; val--) // Check from 6s down to 1s
+                {
+                    if (availableCategories[val - 1]) // If this upper category is available
+                    {
+                        int countOfThisValue = 0;
+                        for(int i=0; i<5; i++) if(currentDiceValues[i] == val) countOfThisValue++;
+
+                        if (countOfThisValue >= 2) // If we have at least two of this number
+                        {
+                            HoldValue(diceToHold, currentDiceValues, val);
+                            // If we held something, and it's a good start for an upper, maybe return early
+                            if (CountHeld(diceToHold) >= 2 && val >= 4) return diceToHold;
+                        }
+                    }
+                }
+            }
+
 
             // 1. Yachtzee
+            Console.WriteLine("Evaluating: Yachtzee");
             if (HasNOfAKind(5, diceCounts, out int yachtzeeValue))
             {
+                Console.WriteLine($"Found Yachtzee: {yachtzeeValue}s");
                 HoldValue(diceToHold, currentDiceValues, yachtzeeValue);
+                Console.WriteLine($"Final Hold Decision: [{string.Join(", ", diceToHold)}]");
                 return diceToHold;
             }
 
             // 2. Four of a Kind
+            Console.WriteLine("Evaluating: Four of a Kind");
             if (HasNOfAKind(4, diceCounts, out int fourOfAKindValue))
             {
+                Console.WriteLine($"Found Four of a Kind: {fourOfAKindValue}s");
                 HoldValue(diceToHold, currentDiceValues, fourOfAKindValue);
+                Console.WriteLine($"Final Hold Decision: [{string.Join(", ", diceToHold)}]");
                 return diceToHold;
             }
 
             // 3. Full House
+            Console.WriteLine("Evaluating: Full House");
             if (HasNOfAKind(3, diceCounts, out int threeOfAKindValueFH))
             {
                 int[] tempCounts = (int[])diceCounts.Clone();
-                tempCounts[threeOfAKindValueFH - 1] = 0; 
+                tempCounts[threeOfAKindValueFH - 1] = 0;
                 if (HasNOfAKind(2, tempCounts, out int pairValueFH))
                 {
+                    Console.WriteLine($"Found Full House: {threeOfAKindValueFH}s and {pairValueFH}s");
                     HoldValue(diceToHold, currentDiceValues, threeOfAKindValueFH);
                     HoldValue(diceToHold, currentDiceValues, pairValueFH);
-                    return diceToHold; 
+                    Console.WriteLine($"Final Hold Decision: [{string.Join(", ", diceToHold)}]");
+                    return diceToHold;
                 }
             }
             
             // 4. Three of a Kind
+            Console.WriteLine("Evaluating: Three of a Kind");
             if (HasNOfAKind(3, diceCounts, out int threeOfAKindValue))
             {
+                Console.WriteLine($"Found Three of a Kind: {threeOfAKindValue}s");
                 HoldValue(diceToHold, currentDiceValues, threeOfAKindValue);
+                Console.WriteLine($"Final Hold Decision: [{string.Join(", ", diceToHold)}]");
                 return diceToHold;
             }
 
             // 5. Straights
             bool[] straightHoldAttempt = new bool[5];
-            if (IsLargeStraight(diceCounts))
+            Console.WriteLine("Evaluating: Large Straight");
+            Console.WriteLine("Checking Large Straight availability.");
+            Console.WriteLine($"availableCategories[Yacht.INDEX_LGESTRAIGHT]: {availableCategories[Yacht.INDEX_LGESTRAIGHT]}");
+            if (availableCategories[Yacht.INDEX_LGESTRAIGHT])
             {
-                MarkStraightDice(straightHoldAttempt, currentDiceValues, 5); 
-                if (CountHeld(straightHoldAttempt) == 5) return straightHoldAttempt;
+                if (IsLargeStraight(diceCounts))
+                {
+                    Console.WriteLine("Large Straight detected. Attempting to hold dice for Large Straight.");
+                    MarkStraightDice(straightHoldAttempt, currentDiceValues, 5);
+                    if (CountHeld(straightHoldAttempt) == 5)
+                    {
+                        Console.WriteLine($"Final Hold Decision (Large Straight): [{string.Join(", ", straightHoldAttempt)}]");
+                        return straightHoldAttempt;
+                    }
+                }
             }
-            
-            for(int i=0; i<5; i++) straightHoldAttempt[i] = false; 
-            if (IsSmallStraight(diceCounts)) 
+            else
             {
-                 MarkStraightDice(straightHoldAttempt, currentDiceValues, 4); 
-                 if (CountHeld(straightHoldAttempt) >= 4) return straightHoldAttempt;
+                Console.WriteLine("Skipping Large Straight: Category not available.");
+            }
+
+            // Reset for Small Straight attempt
+            for (int i = 0; i < 5; i++) straightHoldAttempt[i] = false;
+            Console.WriteLine("Evaluating: Small Straight");
+            Console.WriteLine("Checking Small Straight availability.");
+            Console.WriteLine($"availableCategories[Yacht.INDEX_SMLSTRAIGHT]: {availableCategories[Yacht.INDEX_SMLSTRAIGHT]}");
+            if (availableCategories[Yacht.INDEX_SMLSTRAIGHT])
+            {
+                if (IsSmallStraight(diceCounts))
+                {
+                    Console.WriteLine("Small Straight detected. Attempting to hold dice for Small Straight.");
+                    MarkStraightDice(straightHoldAttempt, currentDiceValues, 4);
+                    if (CountHeld(straightHoldAttempt) >= 4)
+                    {
+                        Console.WriteLine($"Final Hold Decision (Small Straight): [{string.Join(", ", straightHoldAttempt)}]");
+                        return straightHoldAttempt;
+                    }
+                }
+            }
+            else
+            {
+                 Console.WriteLine("Skipping Small Straight: Category not available.");
             }
 
             // 6. Two Pairs
+            Console.WriteLine("Evaluating: Two Pairs");
             int firstPairValue = -1;
             int secondPairValue = -1;
             for (int val = 1; val <= 6; val++)
@@ -110,19 +190,25 @@ namespace ComputerYacht
             }
             if (firstPairValue != -1 && secondPairValue != -1)
             {
+                Console.WriteLine($"Found Two Pairs: {firstPairValue}s and {secondPairValue}s");
                 HoldValue(diceToHold, currentDiceValues, firstPairValue);
                 HoldValue(diceToHold, currentDiceValues, secondPairValue);
-                return diceToHold; 
+                Console.WriteLine($"Final Hold Decision: [{string.Join(", ", diceToHold)}]");
+                return diceToHold;
             }
 
             // 7. One Pair
-            if (firstPairValue != -1) 
+            Console.WriteLine("Evaluating: One Pair");
+            if (firstPairValue != -1)
             {
+                Console.WriteLine($"Found One Pair: {firstPairValue}s");
                 HoldValue(diceToHold, currentDiceValues, firstPairValue);
+                Console.WriteLine($"Final Hold Decision: [{string.Join(", ", diceToHold)}]");
                 return diceToHold;
             }
             
             // 8. Hold High-Value Dice (5s, 6s)
+            Console.WriteLine("Evaluating: Hold High Value Dice");
             if (rollNumber <= 2) {
                 bool heldSomething = false;
                 for(int i=0; i<5; i++) {
@@ -131,11 +217,17 @@ namespace ComputerYacht
                         heldSomething = true;
                     }
                 }
-                if (heldSomething) return diceToHold;
+                if (heldSomething)
+                {
+                    Console.WriteLine($"Holding high value dice.");
+                    Console.WriteLine($"Final Hold Decision: [{string.Join(", ", diceToHold)}]");
+                    return diceToHold;
+                }
             }
 
             // 9. Default behavior
-            if (rollNumber == 2) 
+            Console.WriteLine("Evaluating: Default Behavior");
+            if (rollNumber == 2)
             {
                 int highestDieValue = 0;
                 int highestDieIndex = -1;
@@ -149,11 +241,13 @@ namespace ComputerYacht
                 }
                 if (highestDieIndex != -1)
                 {
+                    Console.WriteLine($"Default: Holding highest die {highestDieValue}");
                     diceToHold[highestDieIndex] = true;
                 }
             }
             
-            return diceToHold; 
+            Console.WriteLine($"Final Hold Decision: [{string.Join(", ", diceToHold)}]");
+            return diceToHold;
         }
 
         #region Dice Holding Helper Methods
@@ -205,24 +299,36 @@ namespace ComputerYacht
 
         private static bool IsSmallStraight(int[] diceCounts)
         {
+            Console.WriteLine("IsSmallStraight called.");
             bool s1234 = diceCounts[0] >= 1 && diceCounts[1] >= 1 && diceCounts[2] >= 1 && diceCounts[3] >= 1;
             bool s2345 = diceCounts[1] >= 1 && diceCounts[2] >= 1 && diceCounts[3] >= 1 && diceCounts[4] >= 1;
             bool s3456 = diceCounts[2] >= 1 && diceCounts[3] >= 1 && diceCounts[4] >= 1 && diceCounts[5] >= 1;
-            return s1234 || s2345 || s3456;
+            bool result = s1234 || s2345 || s3456;
+            Console.WriteLine($"IsSmallStraight result: {result}");
+            return result;
         }
 
         private static bool IsLargeStraight(int[] diceCounts)
         {
+            Console.WriteLine("IsLargeStraight called.");
             bool s12345 = diceCounts[0] >= 1 && diceCounts[1] >= 1 && diceCounts[2] >= 1 && diceCounts[3] >= 1 && diceCounts[4] >= 1;
             bool s23456 = diceCounts[1] >= 1 && diceCounts[2] >= 1 && diceCounts[3] >= 1 && diceCounts[4] >= 1 && diceCounts[5] >= 1;
-            return s12345 || s23456;
+            bool result = s12345 || s23456;
+            Console.WriteLine($"IsLargeStraight result: {result}");
+            return result;
         }
         
         private static void MarkStraightDice(bool[] diceToHold, int[] currentDiceValues, int requiredLength)
         {
+            Console.WriteLine($"MarkStraightDice START - Dice: [{string.Join(", ", currentDiceValues)}], Required Length: {requiredLength}");
             int[] sortedUniqueDice = GetSortedUniqueDice(currentDiceValues);
+            Console.WriteLine($"Sorted Unique Dice: [{string.Join(", ", sortedUniqueDice)}]");
 
-            if (sortedUniqueDice.Length < requiredLength) return;
+            if (sortedUniqueDice.Length < requiredLength)
+            {
+                Console.WriteLine($"MarkStraightDice: Not enough unique dice ({sortedUniqueDice.Length}) for required length ({requiredLength}). Returning.");
+                return;
+            }
 
             for (int i = 0; i <= sortedUniqueDice.Length - requiredLength; i++)
             {
@@ -238,30 +344,36 @@ namespace ComputerYacht
 
                 if (isStraightSequence)
                 {
+                    Console.WriteLine($"MarkStraightDice: Found straight sequence starting at {sortedUniqueDice[i]}");
                     for (int k = 0; k < requiredLength; k++)
                     {
                         int dieValueToLookFor = sortedUniqueDice[i + k];
+                        Console.WriteLine($"MarkStraightDice: Looking to hold die value {dieValueToLookFor}");
                         bool alreadyHeldForThisValue = false;
-                        for(int die_idx = 0; die_idx < 5; die_idx++) { 
+                        for(int die_idx = 0; die_idx < 5; die_idx++) {
                             if (diceToHold[die_idx] && currentDiceValues[die_idx] == dieValueToLookFor) {
+                                Console.WriteLine($"MarkStraightDice: Value {dieValueToLookFor} already held at index {die_idx}.");
                                 alreadyHeldForThisValue = true;
                                 break;
                             }
                         }
-                        if (!alreadyHeldForThisValue) { 
+                        if (!alreadyHeldForThisValue) {
                             for (int die_idx = 0; die_idx < 5; die_idx++)
                             {
                                 if (!diceToHold[die_idx] && currentDiceValues[die_idx] == dieValueToLookFor)
                                 {
+                                    Console.WriteLine($"MarkStraightDice: Holding die {currentDiceValues[die_idx]} at index {die_idx} for straight.");
                                     diceToHold[die_idx] = true;
-                                    break; 
+                                    break;
                                 }
                             }
                         }
                     }
-                    return; 
+                    Console.WriteLine($"MarkStraightDice END - Current Hold: [{string.Join(", ", diceToHold)}]");
+                    return;
                 }
             }
+            Console.WriteLine($"MarkStraightDice END - No straight of length {requiredLength} found to hold. Current Hold: [{string.Join(", ", diceToHold)}]");
         }
 
         private static int[] GetSortedUniqueDice(int[] currentDiceValues)

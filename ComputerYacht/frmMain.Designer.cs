@@ -28,6 +28,10 @@
 			this.txtDice3 = new System.Windows.Forms.TextBox();
 			this.txtDice4 = new System.Windows.Forms.TextBox();
 			this.txtDice5 = new System.Windows.Forms.TextBox();
+			this.cmbRollNumber = new System.Windows.Forms.ComboBox();
+			this.txtCurrentUpperScore = new System.Windows.Forms.TextBox();
+			this.lblRollNumber = new System.Windows.Forms.Label();
+			this.lblCurrentUpperScore = new System.Windows.Forms.Label();
 			base.SuspendLayout();
 			this.tbDices.Anchor = (global::System.Windows.Forms.AnchorStyles.Top | global::System.Windows.Forms.AnchorStyles.Bottom | global::System.Windows.Forms.AnchorStyles.Left);
 			this.tbDices.Font = new global::System.Drawing.Font("Microsoft Sans Serif", 14f, global::System.Drawing.FontStyle.Regular, global::System.Drawing.GraphicsUnit.Point, 0);
@@ -69,51 +73,95 @@
 			// this.btnPause.UseVisualStyleBackColor = true;
 			// this.btnPause.Click += new global::System.EventHandler(this.btnPause_Click);
 			this.btnGetHoldSuggestion.Anchor = (global::System.Windows.Forms.AnchorStyles.Bottom | global::System.Windows.Forms.AnchorStyles.Left);
-			this.btnGetHoldSuggestion.Location = new global::System.Drawing.Point(192, 440); // Adjusted location
+			this.btnGetHoldSuggestion.Location = new global::System.Drawing.Point(12, 500); // Adjusted location
 			this.btnGetHoldSuggestion.Name = "btnGetHoldSuggestion";
-			this.btnGetHoldSuggestion.Size = new global::System.Drawing.Size(150, 23); 
-			this.btnGetHoldSuggestion.TabIndex = 5; 
+			this.btnGetHoldSuggestion.Size = new global::System.Drawing.Size(150, 23);
+			this.btnGetHoldSuggestion.TabIndex = 13; // Adjusted TabIndex
 			this.btnGetHoldSuggestion.Text = "获取保留建议";
 			this.btnGetHoldSuggestion.UseVisualStyleBackColor = true;
 			this.btnGetHoldSuggestion.Click += new global::System.EventHandler(this.btnGetHoldSuggestion_Click);
 			// 
 			// txtDice1
 			// 
-			this.txtDice1.Location = new global::System.Drawing.Point(12, 440);
+			this.txtDice1.Location = new global::System.Drawing.Point(12, 470); // Adjusted location
 			this.txtDice1.Name = "txtDice1";
 			this.txtDice1.Size = new global::System.Drawing.Size(30, 20);
 			this.txtDice1.TabIndex = 6;
-			// 
+			//
 			// txtDice2
-			// 
-			this.txtDice2.Location = new global::System.Drawing.Point(48, 440);
+			//
+			this.txtDice2.Location = new global::System.Drawing.Point(48, 470); // Adjusted location
 			this.txtDice2.Name = "txtDice2";
 			this.txtDice2.Size = new global::System.Drawing.Size(30, 20);
 			this.txtDice2.TabIndex = 7;
-			// 
+			//
 			// txtDice3
-			// 
-			this.txtDice3.Location = new global::System.Drawing.Point(84, 440);
+			//
+			this.txtDice3.Location = new global::System.Drawing.Point(84, 470); // Adjusted location
 			this.txtDice3.Name = "txtDice3";
 			this.txtDice3.Size = new global::System.Drawing.Size(30, 20);
 			this.txtDice3.TabIndex = 8;
-			// 
+			//
 			// txtDice4
-			// 
-			this.txtDice4.Location = new global::System.Drawing.Point(120, 440);
+			//
+			this.txtDice4.Location = new global::System.Drawing.Point(120, 470); // Adjusted location
 			this.txtDice4.Name = "txtDice4";
 			this.txtDice4.Size = new global::System.Drawing.Size(30, 20);
 			this.txtDice4.TabIndex = 9;
-			// 
+			//
 			// txtDice5
-			// 
-			this.txtDice5.Location = new global::System.Drawing.Point(156, 440);
+			//
+			this.txtDice5.Location = new global::System.Drawing.Point(156, 470); // Adjusted location
 			this.txtDice5.Name = "txtDice5";
 			this.txtDice5.Size = new global::System.Drawing.Size(30, 20);
 			this.txtDice5.TabIndex = 10;
+			//
+			// cmbRollNumber
+			//
+			this.cmbRollNumber.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+			this.cmbRollNumber.FormattingEnabled = true;
+			this.cmbRollNumber.Items.AddRange(new object[] {
+			"1",
+			"2",
+			"3"});
+			this.cmbRollNumber.Location = new global::System.Drawing.Point(280, 470); // Adjusted location
+			this.cmbRollNumber.Name = "cmbRollNumber";
+			this.cmbRollNumber.Size = new global::System.Drawing.Size(40, 21);
+			this.cmbRollNumber.TabIndex = 11;
+			//
+			// txtCurrentUpperScore
+			//
+			this.txtCurrentUpperScore.Location = new global::System.Drawing.Point(390, 470); // Adjusted location
+			this.txtCurrentUpperScore.Name = "txtCurrentUpperScore";
+			this.txtCurrentUpperScore.Size = new global::System.Drawing.Size(40, 20);
+			this.txtCurrentUpperScore.TabIndex = 12;
+			this.txtCurrentUpperScore.Text = "0";
+			//
+			// lblRollNumber
+			//
+			this.lblRollNumber.AutoSize = true;
+			this.lblRollNumber.Location = new global::System.Drawing.Point(200, 473); // Adjusted location
+			this.lblRollNumber.Name = "lblRollNumber";
+			this.lblRollNumber.Size = new global::System.Drawing.Size(74, 13);
+			this.lblRollNumber.TabIndex = 14;
+			this.lblRollNumber.Text = "当前掷骰次数:";
+			//
+			// lblCurrentUpperScore
+			//
+			this.lblCurrentUpperScore.AutoSize = true;
+			this.lblCurrentUpperScore.Location = new global::System.Drawing.Point(325, 473); // Adjusted location
+			this.lblCurrentUpperScore.Name = "lblCurrentUpperScore";
+			this.lblCurrentUpperScore.Size = new global::System.Drawing.Size(59, 13);
+			this.lblCurrentUpperScore.TabIndex = 15;
+			this.lblCurrentUpperScore.Text = "上区总分:";
+			//
 			base.AutoScaleDimensions = new global::System.Drawing.SizeF(6f, 13f);
 			base.AutoScaleMode = global::System.Windows.Forms.AutoScaleMode.Font;
-			base.ClientSize = new global::System.Drawing.Size(730, 512);
+			base.ClientSize = new global::System.Drawing.Size(730, 535); // Adjusted ClientSize
+			base.Controls.Add(this.lblCurrentUpperScore);
+			base.Controls.Add(this.lblRollNumber);
+			base.Controls.Add(this.txtCurrentUpperScore);
+			base.Controls.Add(this.cmbRollNumber);
 			base.Controls.Add(this.txtDice5);
 			base.Controls.Add(this.txtDice4);
 			base.Controls.Add(this.txtDice3);
@@ -160,5 +208,9 @@
 		private System.Windows.Forms.TextBox txtDice3;
 		private System.Windows.Forms.TextBox txtDice4;
 		private System.Windows.Forms.TextBox txtDice5;
+		private System.Windows.Forms.ComboBox cmbRollNumber;
+		private System.Windows.Forms.TextBox txtCurrentUpperScore;
+		private System.Windows.Forms.Label lblRollNumber;
+		private System.Windows.Forms.Label lblCurrentUpperScore;
 	}
 }

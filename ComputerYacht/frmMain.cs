@@ -22,7 +22,7 @@ namespace ComputerYacht
 
 	public partial class frmMain : Form
 	{
-		private TurnStepPhase currentPhase; // Kept for potential future re-integration of step-by-step game
+		private TurnStepPhase currentPhase = TurnStepPhase.READY_FOR_ROLL_1; // Kept for potential future re-integration of step-by-step game
 		private int[] currentDiceValues = new int[5]; // Kept for potential future re-integration
 		private bool[] currentHeldDice = new bool[5]; // Kept for potential future re-integration
 		private Computer compPlayer = new Computer(); // AI Player instance
@@ -100,7 +100,11 @@ namespace ComputerYacht
 			if (txtDice4 != null) txtDice4.Text = "";
 			if (txtDice5 != null) txtDice5.Text = "";
 			// Clear any visual hold suggestions
-			DisplayDiceHoldSuggestion(new bool[5]); 
+			DisplayDiceHoldSuggestion(new bool[5]);
+
+			// Reset new controls
+			if (cmbRollNumber != null) cmbRollNumber.SelectedIndex = 0; // Default to "1"
+			if (txtCurrentUpperScore != null) txtCurrentUpperScore.Text = "0";
 		}
 
 		private void UpdateStatusMessage(string message)
@@ -181,19 +185,31 @@ namespace ComputerYacht
 				manualDiceArray[i] = diceValue;
 			}
 
+			// Read roll number
+			if (cmbRollNumber.SelectedItem == null || !int.TryParse(cmbRollNumber.SelectedItem.ToString(), out int rollNumber) || rollNumber < 1 || rollNumber > 3)
+			{
+				MessageBox.Show("请选择有效的掷骰次数 (1, 2, 或 3)。", "输入错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				return;
+			}
+
+			// Read current upper score
+			if (!int.TryParse(txtCurrentUpperScore.Text, out int currentUpperScore) || currentUpperScore < 0)
+			{
+				MessageBox.Show("请输入有效的当前上区总分 (非负整数)。", "输入错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				return;
+			}
+
 			try
 			{
 				yYacht.SetManuallyEnteredDice(manualDiceArray);
-				// For AI suggestion, we assume it's like the first roll decision.
 				// The AI needs to know which categories are still available to make a good decision.
 				// We'll get the currently available categories for player 0.
-				bool[] availableCategories = yYacht.GetPlayerAvailableCategories(0); 
+				bool[] availableCategories = yYacht.GetPlayerAvailableCategories(0);
 
-				// The '1' indicates it's the equivalent of a decision after the first roll.
-				bool[] holdSuggestion = compPlayer.DecideDiceToHold(manualDiceArray, 1, availableCategories); 
+				bool[] holdSuggestion = compPlayer.DecideDiceToHold(manualDiceArray, rollNumber, availableCategories, currentUpperScore);
 				DisplayDiceHoldSuggestion(holdSuggestion);
 				UpdateStatusMessage("AI 保留建议已显示。");
-				
+
 				// Update tbDices to show the manually entered dice and their hold status
                 this.tbDices.Text = this.yYacht.DicesToString(); 
 			}
