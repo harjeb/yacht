@@ -233,3 +233,7 @@
 <![CDATA[
 * [2025-05-19 16:06:27] - [Code Fix: Corrected Scoring Index Constants] Updated `INDEX_SMLSTRAIGHT`, `INDEX_LGESTRAIGHT`, `INDEX_YACHT`, and `INDEX_CHANCE` in `ComputerYacht/Yacht.cs` to their correct 0-based index values to resolve AI logic errors.
 ]]>
+<![CDATA[
+* [2025-05-19 17:23:00] - [Code Update: Yachtzee Single Score Logic] Modified `Yacht.cs` in the `ScoreValue` method to remove the 100-point bonus for subsequent Yachtzees. Ensured that AI logic in `Computer.cs` (`DecideDiceToHold` and `CalculateScoreForCategory`) correctly handles scenarios where Yachtzee category is already used (deprioritizes holding for it, scores 0 if selected again). This aligns with the new rule that Yachtzee scores only once.
+]]>
+* [2025-05-19 17:39:00] - [Code Update: `DecideDiceToHold` Logic Enhanced] Modified the `DecideDiceToHold` method in [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:39) to ensure AI dice holding decisions are strictly based on currently available scoring categories. This includes adding availability checks for Four of a Kind, Full House, Three of a Kind, and refining logic for Pairs and fallback strategies. The aim is to align AI behavior more closely with optimal play given category availability, and specifically to ensure for dice `[2,2,2,2,6]` with only "Sixes" available, the AI holds `[F,F,F,F,T]`.

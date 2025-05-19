@@ -190,25 +190,14 @@ namespace ComputerYacht
 			                               this.iDicesValueSorted[2] == this.iDicesValueSorted[3] && 
 			                               this.iDicesValueSorted[3] == this.iDicesValueSorted[4]);
 
-			if (isCurrentRollAYachtzee && this.iScores[this.iPlayerIndex, INDEX_YACHT] > 0) 
-			{
-                // If already scored a Yachtzee (value > 0), and this roll is also a Yachtzee
-                // Add 100 bonus to the Yachtzee score slot, regardless of where this Yachtzee is being scored now.
-                // (Unless it's being scored in the Yachtzee slot itself for the *first* time, which is covered by scoreToActuallyStore being 50)
-                if (Item != INDEX_YACHT || (Item == INDEX_YACHT && scoreToActuallyStore == 50 && this.iScores[this.iPlayerIndex, INDEX_YACHT] > 50) )
-                {
-                     // If we are scoring this yachtzee in a number category, or if we are scoring it in the yachtzee category but it's a subsequent one.
-                     // The original logic: `this.iScores[this.iPlayerIndex, 12] += 100;`
-                     // This implies the bonus is always added to the Yachtzee category score.
-                     this.iScores[this.iPlayerIndex, INDEX_YACHT] += 100;
-                }
-			}
-            else if (isCurrentRollAYachtzee && Item == INDEX_YACHT && scoreToActuallyStore == 50)
-            {
-                // This is the first Yachtzee being scored in the Yachtzee box.
-                // No *additional* bonus here, the 50 is the score.
-                // The iScores[this.iPlayerIndex, Item] = scoreToActuallyStore; above handles this.
-            }
+			// Yachtzee bonus logic removed as per new rule: Yachtzee scores only once.
+			         // The Computer.cs CalculateScoreForCategory method already ensures Yachtzee category itself scores 0 if re-selected after being used.
+			         // Joker rules for scoring a Yachtzee in other categories are still handled by Computer.cs.
+			         if (isCurrentRollAYachtzee && Item == INDEX_YACHT && scoreToActuallyStore == 50 && this.iScores[this.iPlayerIndex, INDEX_YACHT] == 50)
+			         {
+			             // This condition confirms it's the first time scoring 50 in Yachtzee category.
+			             // No *additional* bonus. The main scoring line `this.iScores[this.iPlayerIndex, Item] = scoreToActuallyStore;` handles the 50 points.
+			         }
 
 
 			// Upper section bonus

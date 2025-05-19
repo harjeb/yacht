@@ -533,3 +533,67 @@ The constants `INDEX_SMLSTRAIGHT`, `INDEX_LGESTRAIGHT`, `INDEX_YACHT`, and `INDE
 - Corrected `INDEX_CHANCE` from `13` to `12`.
 - File affected: [`ComputerYacht/Yacht.cs`](ComputerYacht/Yacht.cs:659-665)
 ]]>
+<![CDATA[
+---
+### Decision (Code)
+[2025-05-19 17:23:00] - Modified Yachtzee Scoring Logic to Single Score & No Bonus
+
+**Rationale:**
+The user requested that the "Yachtzee" scoring category only be scorable once and that any additional bonuses for subsequent Yachtzees be removed.
+1.  The AI logic in `Computer.cs`'s `DecideDiceToHold` method already correctly deprioritizes going for a Yachtzee if the category is unavailable.
+2.  The `Computer.cs`'s `CalculateScoreForCategory` method correctly scores 0 if the Yachtzee category is selected when already used.
+3.  The primary change was to remove the 100-point bonus logic for subsequent Yachtzees from `Yacht.cs`'s `ScoreValue` method.
+
+**Details:**
+- Modified: [`ComputerYacht/Yacht.cs`](ComputerYacht/Yacht.cs:0) (specifically the `ScoreValue` method, lines around 193-204 were altered to remove the bonus logic).
+- Verified: [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0) (no changes needed as existing logic met requirements).
+]]>
+---
+### Decision (Code Review)
+[2025-05-19 17:26:00] - Reviewed scoring logic for "score only once" rule.
+
+**Rationale:**
+The task was to review the scoring logic in `Computer.cs`, `Yacht.cs`, and `frmMain.cs` to ensure all scoring categories adhere to the "score only once" rule.
+
+**Details:**
+*   **`Computer.cs`:**
+    *   `DecideDiceToHold`: Considers `availableCategories` when deciding which dice to hold, especially for Yachtzee and Straights. For other categories, while not always explicitly checking `availableCategories` for holding, the overall AI aims to maximize score by choosing an available category in `ChooseScoreCategory`.
+    *   `CalculateScoreForCategory`: Correctly returns 0 if the Yachtzee category is selected for scoring but is already used (`!availableCategories[Yacht.INDEX_YACHT]`). For other categories, it calculates potential scores.
+    *   `ChooseScoreCategory`: Explicitly iterates only through `availableCategories` when selecting a category to score in.
+*   **`Yacht.cs`:**
+    *   `ScoreValue`:
+        *   The logic for awarding a 100-point bonus for subsequent Yachtzees has been removed, ensuring the Yachtzee category itself (50 points) is scored only once. Joker rules still apply if a Yachtzee is rolled after the Yachtzee category has been scored.
+        *   For all other categories, `ScoreValue` itself does not prevent overwriting a previously scored category. It relies on the calling logic (AI or UI) to only attempt to score in available categories (where `iScores[player, item] == -1`).
+    *   `GetPlayerAvailableCategories` / `IsCategoryAvailable`: Correctly determine category availability based on whether `iScores[player, item]` is -1.
+*   **`frmMain.cs`:**
+    *   The current UI (`btnGetHoldSuggestion_Click`) does not perform actual scoring. It allows users to define `availableCategories` via checkboxes for AI hold suggestions.
+    *   If full game play with user scoring were to be implemented, the UI would need to prevent selection of already-scored categories.
+
+**Conclusion:**
+The existing logic, primarily driven by the AI in `Computer.cs` correctly using `availableCategories` (derived from `Yacht.cs`'s score tracking), ensures that categories are effectively scored only once. No code modifications are deemed necessary to enforce this rule under the current AI-driven game flow or the UI's "get suggestion" feature.
+
+**Files Reviewed:**
+*   [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0)
+*   [`ComputerYacht/Yacht.cs`](ComputerYacht/Yacht.cs:0)
+*   [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0)
+---
+### Decision (Code)
+[2025-05-19 17:39:00] - Modified `DecideDiceToHold` in `Computer.cs` for Stricter Category-Based AI Decisions
+
+**Rationale:**
+The user requested to modify the AI's dice holding strategy in `Computer.cs` to ensure that decisions to hold dice are strictly based on currently available scoring categories. This prevents the AI from holding dice for categories that are no longer available, aiming for more realistic and potentially challenging AI behavior. Specific changes involved adding availability checks for Four of a Kind, Full House, Three of a Kind, and refining the logic for holding Pairs and fallback strategies (Hold High-Value Dice, Default Behavior) to consider category availability. The goal was to make the AI's decision `[F,F,F,F,T]` for dice `[2,2,2,2,6]` when only "Sixes" is available.
+
+**Details:**
+- Modified: [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:39) (`DecideDiceToHold` method)
+    - Added `if (availableCategories[Yacht.INDEX_4KIND])` check before Four of a Kind logic.
+    - Added `if (availableCategories[Yacht.INDEX_FULLHOUSE])` check before Full House logic.
+    - Added `if (availableCategories[Yacht.INDEX_3KIND])` check before Three of a Kind logic.
+    - Modified Pairs logic:
+        - Hold pairs only if 3K, 4K, FH, or Chance categories are available, OR if the pair's value corresponds to an available upper section category.
+    - Modified Hold High-Value Dice (Fallback) logic:
+        - Prioritize holding dice that contribute to an available upper section category.
+        - If no such upper section is available, and Chance is available, hold the highest die/dice.
+    - Modified Default Behavior (Final Fallback for roll 2):
+        - If Chance is available, hold the single highest die.
+        - If Chance is not available, hold nothing.
+    - For roll 1, if no other strategy holds dice, the default is to re-roll all.

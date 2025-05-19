@@ -885,3 +885,61 @@ Successfully fixed the primary structural compilation errors in [`ComputerYacht/
 <![CDATA[
 * [2025-05-19 16:06:38] - [Code Task: Correct Yacht.cs Index Constants - COMPLETED] Fixed incorrect values for `INDEX_SMLSTRAIGHT`, `INDEX_LGESTRAIGHT`, `INDEX_YACHT`, and `INDEX_CHANCE` in `ComputerYacht/Yacht.cs`.
 ]]>
+<![CDATA[
+* [2025-05-19 17:23:00] - [Code Task: Modified Yachtzee Scoring Logic - COMPLETED] Updated `Yacht.cs` to ensure Yachtzee scores only once and removed the 100-point bonus for subsequent Yachtzees. Verified AI logic in `Computer.cs` aligns with this rule.
+]]>
+---
+## Task: Review Scoring Logic for "Score Only Once" Rule (Phase 30 - Code Review)
+
+**Overall Status:** COMPLETED
+**Timestamp:** 2025-05-19 17:27:00
+
+### Sub-tasks (Phase 30):
+
+1.  **Review `Computer.cs` (`DecideDiceToHold`, `CalculateScoreForCategory`, `ChooseScoreCategory`):**
+    *   Status: COMPLETED
+    *   Notes: Confirmed AI considers `availableCategories` for holding decisions and category selection. `CalculateScoreForCategory` correctly handles used Yachtzee category (scores 0).
+2.  **Review `Yacht.cs` (`ScoreValue`, `GetPlayerAvailableCategories`, `IsCategoryAvailable`):**
+    *   Status: COMPLETED
+    *   Notes: Confirmed Yachtzee bonus for multiple Yachtzees is removed. `ScoreValue` relies on callers to check availability for other categories. Availability checks are correct.
+3.  **Review `frmMain.cs` (UI interaction with scoring):**
+    *   Status: COMPLETED
+    *   Notes: Current UI does not perform direct scoring actions. It allows users to set `availableCategories` for AI suggestions.
+4.  **Determine Necessity of Code Adjustments:**
+    *   Status: COMPLETED
+    *   Notes: No code adjustments are necessary as the current AI-driven logic correctly adheres to the "score only once" principle.
+5.  **Update Memory Bank - `decisionLog.md`:**
+    *   Status: COMPLETED
+    *   Notes: Logged the review findings and conclusion.
+6.  **Update Memory Bank - `progress.md` (This update):**
+    *   Status: COMPLETED
+
+**Summary of Completion (Phase 30):**
+The review of the scoring logic across `Computer.cs`, `Yacht.cs`, and `frmMain.cs` is complete. It has been confirmed that the existing mechanisms, particularly the AI's use of `availableCategories` and the specific handling of the Yachtzee category, ensure that all scoring items adhere to the "score only once" rule within the current program flow. No code modifications were required. Memory Bank has been updated.
+---
+## Task: Modify `DecideDiceToHold` for Stricter Category-Based AI Decisions (Phase 31 - Code Implementation)
+
+**Overall Status:** COMPLETED
+**Timestamp:** 2025-05-19 17:39:00
+
+### Sub-tasks (Phase 31):
+
+1.  **Analyze Requirements:**
+    *   Status: COMPLETED
+    *   Notes: AI dice holding decisions must be strictly based on *available* scoring categories.
+2.  **Modify `ComputerYacht/Computer.cs` - `DecideDiceToHold` method:**
+    *   Status: COMPLETED
+    *   Notes:
+        *   Added availability checks for N-of-a-Kind categories (4K, FH, 3K).
+        *   Refined Pairs logic to consider availability of relevant scoring categories (3K, 4K, FH, Chance, or corresponding Upper Section).
+        *   Refined Fallback logic (Hold High-Value, Default) to prioritize available Upper Sections or Chance.
+        *   Ensured logic aims for `[F,F,F,F,T]` for dice `[2,2,2,2,6]` when only "Sixes" is available.
+3.  **Update Memory Bank - `decisionLog.md`:**
+    *   Status: COMPLETED
+4.  **Update Memory Bank - `activeContext.md`:**
+    *   Status: PENDING
+5.  **Update Memory Bank - `progress.md` (This update):**
+    *   Status: COMPLETED
+
+**Summary of Completion (Phase 31):**
+The `DecideDiceToHold` method in [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0) has been successfully modified to make AI dice retention decisions strictly based on available scoring categories. This change is intended to make the AI's play more strategically sound according to the game state.

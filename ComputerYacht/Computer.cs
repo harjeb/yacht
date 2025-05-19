@@ -115,48 +115,82 @@ Console.WriteLine($"[PRE-CHECK LGS] availableCategories[10] = {availableCategori
 
             // 1. Yachtzee
             Console.WriteLine("Evaluating: Yachtzee");
-            if (HasNOfAKind(5, diceCounts, out int yachtzeeValue))
+            if (availableCategories[Yacht.INDEX_YACHT]) // Check if Yachtzee category is available
             {
-                Console.WriteLine($"Found Yachtzee: {yachtzeeValue}s");
-                HoldValue(diceToHold, currentDiceValues, yachtzeeValue);
-                Console.WriteLine($"Final Hold Decision: [{string.Join(", ", diceToHold)}]");
-                return diceToHold;
-            }
-
-            // 2. Four of a Kind
-            Console.WriteLine("Evaluating: Four of a Kind");
-            if (HasNOfAKind(4, diceCounts, out int fourOfAKindValue))
-            {
-                Console.WriteLine($"Found Four of a Kind: {fourOfAKindValue}s");
-                HoldValue(diceToHold, currentDiceValues, fourOfAKindValue);
-                Console.WriteLine($"Final Hold Decision: [{string.Join(", ", diceToHold)}]");
-                return diceToHold;
-            }
-
-            // 3. Full House
-            Console.WriteLine("Evaluating: Full House");
-            if (HasNOfAKind(3, diceCounts, out int threeOfAKindValueFH))
-            {
-                int[] tempCounts = (int[])diceCounts.Clone();
-                tempCounts[threeOfAKindValueFH - 1] = 0;
-                if (HasNOfAKind(2, tempCounts, out int pairValueFH))
+                if (HasNOfAKind(5, diceCounts, out int yachtzeeValue))
                 {
-                    Console.WriteLine($"Found Full House: {threeOfAKindValueFH}s and {pairValueFH}s");
-                    HoldValue(diceToHold, currentDiceValues, threeOfAKindValueFH);
-                    HoldValue(diceToHold, currentDiceValues, pairValueFH);
+                    Console.WriteLine($"Found Yachtzee: {yachtzeeValue}s (Category Available)");
+                    HoldValue(diceToHold, currentDiceValues, yachtzeeValue);
                     Console.WriteLine($"Final Hold Decision: [{string.Join(", ", diceToHold)}]");
                     return diceToHold;
                 }
             }
+            else
+            {
+                // Yachtzee category not available, but 5 of a kind might still be useful for other categories (e.g., upper section, chance)
+                // We don't prioritize holding all 5 for the *purpose* of a second Yachtzee score.
+                // The existing logic for 4 of a kind, 3 of a kind, etc., will handle holding parts of it if beneficial.
+                if (HasNOfAKind(5, diceCounts, out int yachtzeeValueFiveKind))
+                {
+                     Console.WriteLine($"Detected 5 of a kind ({yachtzeeValueFiveKind}s), but Yachtzee category is NOT available. Will not hold all 5 solely for Yachtzee.");
+                }
+            }
+
+            // 2. Four of a Kind
+            Console.WriteLine("Evaluating: Four of a Kind");
+            if (availableCategories[Yacht.INDEX_4KIND])
+            {
+                if (HasNOfAKind(4, diceCounts, out int fourOfAKindValue))
+                {
+                    Console.WriteLine($"Found Four of a Kind: {fourOfAKindValue}s (Category Available)");
+                    HoldValue(diceToHold, currentDiceValues, fourOfAKindValue);
+                    Console.WriteLine($"Final Hold Decision: [{string.Join(", ", diceToHold)}]");
+                    return diceToHold;
+                }
+            }
+            else
+            {
+                Console.WriteLine("Skipping Four of a Kind: Category not available.");
+            }
+
+            // 3. Full House
+            Console.WriteLine("Evaluating: Full House");
+            if (availableCategories[Yacht.INDEX_FULLHOUSE])
+            {
+                if (HasNOfAKind(3, diceCounts, out int threeOfAKindValueFH))
+                {
+                    int[] tempCounts = (int[])diceCounts.Clone();
+                    tempCounts[threeOfAKindValueFH - 1] = 0;
+                    if (HasNOfAKind(2, tempCounts, out int pairValueFH))
+                    {
+                        Console.WriteLine($"Found Full House: {threeOfAKindValueFH}s and {pairValueFH}s (Category Available)");
+                        HoldValue(diceToHold, currentDiceValues, threeOfAKindValueFH);
+                        HoldValue(diceToHold, currentDiceValues, pairValueFH);
+                        Console.WriteLine($"Final Hold Decision: [{string.Join(", ", diceToHold)}]");
+                        return diceToHold;
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine("Skipping Full House: Category not available.");
+            }
             
             // 4. Three of a Kind
             Console.WriteLine("Evaluating: Three of a Kind");
-            if (HasNOfAKind(3, diceCounts, out int threeOfAKindValue))
+            if (availableCategories[Yacht.INDEX_3KIND])
             {
-                Console.WriteLine($"Found Three of a Kind: {threeOfAKindValue}s");
-                HoldValue(diceToHold, currentDiceValues, threeOfAKindValue);
-                Console.WriteLine($"Final Hold Decision: [{string.Join(", ", diceToHold)}]");
-                return diceToHold;
+                if (HasNOfAKind(3, diceCounts, out int threeOfAKindValue))
+                {
+                    Console.WriteLine($"Found Three of a Kind: {threeOfAKindValue}s (Category Available)");
+                    HoldValue(diceToHold, currentDiceValues, threeOfAKindValue);
+                    Console.WriteLine($"Final Hold Decision: [{string.Join(", ", diceToHold)}]");
+                    return diceToHold;
+                }
+            }
+            else
+            {
+                Console.WriteLine("Skipping Three of a Kind: Category not available.");
             }
 
             // 5. Straights
@@ -204,78 +238,142 @@ Console.WriteLine($"[PRE-CHECK LGS] availableCategories[10] = {availableCategori
             {
                  Console.WriteLine("Skipping Small Straight: Category not available.");
             }
+ 
+            // 6. Pairs (Two Pairs, One Pair)
+            // Condition for holding pairs: 3K, 4K, FH, or Chance is available, OR pair helps an available upper section.
+            bool canUsePairForLower = availableCategories[Yacht.INDEX_3KIND] ||
+                                      availableCategories[Yacht.INDEX_4KIND] ||
+                                      availableCategories[Yacht.INDEX_FULLHOUSE] ||
+                                      availableCategories[Yacht.INDEX_CHANCE];
 
-            // 6. Two Pairs
-            Console.WriteLine("Evaluating: Two Pairs");
             int firstPairValue = -1;
-            int secondPairValue = -1;
-            for (int val = 1; val <= 6; val++)
+            int secondPairValue = -1; // For two pairs
+            for (int val = 6; val >= 1; val--) // Check for higher pairs first
             {
                 if (diceCounts[val - 1] >= 2)
                 {
                     if (firstPairValue == -1) firstPairValue = val;
-                    else { secondPairValue = val; break; }
+                    else { secondPairValue = val; break; } // Found two pairs
                 }
-            }
-            if (firstPairValue != -1 && secondPairValue != -1)
-            {
-                Console.WriteLine($"Found Two Pairs: {firstPairValue}s and {secondPairValue}s");
-                HoldValue(diceToHold, currentDiceValues, firstPairValue);
-                HoldValue(diceToHold, currentDiceValues, secondPairValue);
-                Console.WriteLine($"Final Hold Decision: [{string.Join(", ", diceToHold)}]");
-                return diceToHold;
             }
 
-            // 7. One Pair
-            Console.WriteLine("Evaluating: One Pair");
-            if (firstPairValue != -1)
+            if (secondPairValue != -1) // Found two pairs (e.g., two 6s and two 5s)
             {
-                Console.WriteLine($"Found One Pair: {firstPairValue}s");
-                HoldValue(diceToHold, currentDiceValues, firstPairValue);
-                Console.WriteLine($"Final Hold Decision: [{string.Join(", ", diceToHold)}]");
-                return diceToHold;
-            }
-            
-            // 8. Hold High-Value Dice (5s, 6s)
-            Console.WriteLine("Evaluating: Hold High Value Dice");
-            if (rollNumber <= 2) {
-                bool heldSomething = false;
-                for(int i=0; i<5; i++) {
-                    if (currentDiceValues[i] >= 5) { 
-                        diceToHold[i] = true;
-                        heldSomething = true;
-                    }
-                }
-                if (heldSomething)
+                Console.WriteLine("Evaluating: Two Pairs");
+                bool firstPairHelpsUpper = (firstPairValue >= 1 && firstPairValue <=6 && availableCategories[firstPairValue - 1]);
+                bool secondPairHelpsUpper = (secondPairValue >= 1 && secondPairValue <=6 && availableCategories[secondPairValue - 1]);
+
+                if (canUsePairForLower || firstPairHelpsUpper || secondPairHelpsUpper)
                 {
-                    Console.WriteLine($"Holding high value dice.");
+                    Console.WriteLine($"Found Two Pairs: {firstPairValue}s and {secondPairValue}s. Condition met.");
+                    HoldValue(diceToHold, currentDiceValues, firstPairValue);
+                    HoldValue(diceToHold, currentDiceValues, secondPairValue);
                     Console.WriteLine($"Final Hold Decision: [{string.Join(", ", diceToHold)}]");
                     return diceToHold;
                 }
-            }
-
-            // 9. Default behavior
-            Console.WriteLine("Evaluating: Default Behavior");
-            if (rollNumber == 2)
-            {
-                int highestDieValue = 0;
-                int highestDieIndex = -1;
-                for (int i = 0; i < 5; i++)
+                else
                 {
-                    if (currentDiceValues[i] > highestDieValue)
-                    {
-                        highestDieValue = currentDiceValues[i];
-                        highestDieIndex = i;
-                    }
+                     Console.WriteLine($"Found Two Pairs: {firstPairValue}s and {secondPairValue}s. Condition NOT met. Skipping hold.");
                 }
-                if (highestDieIndex != -1)
+            }
+            else if (firstPairValue != -1) // Found one pair
+            {
+                Console.WriteLine("Evaluating: One Pair");
+                bool pairHelpsUpper = (firstPairValue >= 1 && firstPairValue <=6 && availableCategories[firstPairValue - 1]);
+                if (canUsePairForLower || pairHelpsUpper)
                 {
-                    Console.WriteLine($"Default: Holding highest die {highestDieValue}");
-                    diceToHold[highestDieIndex] = true;
+                    Console.WriteLine($"Found One Pair: {firstPairValue}s. Condition met.");
+                    HoldValue(diceToHold, currentDiceValues, firstPairValue);
+                    // If it's a high pair and we are on roll 1, consider holding other high dice for Chance if available
+                    if (rollNumber == 1 && firstPairValue >=4 && availableCategories[Yacht.INDEX_CHANCE] && CountHeld(diceToHold) < 5) {
+                        for(int i=0; i<5; i++) {
+                            if (!diceToHold[i] && currentDiceValues[i] >= 4) { // Hold other high dice
+                                diceToHold[i] = true;
+                            }
+                        }
+                    }
+                    Console.WriteLine($"Final Hold Decision: [{string.Join(", ", diceToHold)}]");
+                    return diceToHold;
+                }
+                else
+                {
+                    Console.WriteLine($"Found One Pair: {firstPairValue}s. Condition NOT met. Skipping hold.");
                 }
             }
             
-            Console.WriteLine($"Final Hold Decision: [{string.Join(", ", diceToHold)}]");
+            // 8. Hold High-Value Dice (Fallback)
+            Console.WriteLine("Evaluating: Hold High Value Dice (Fallback)");
+            if (rollNumber <= 2) {
+                bool heldSomethingForFallback = false;
+                // Prioritize dice that help available upper sections
+                for (int val = 6; val >= 1; val--) {
+                    if (availableCategories[val - 1]) { // If this upper category is available
+                        for(int i=0; i<5; i++) {
+                            if (currentDiceValues[i] == val && !diceToHold[i]) { // Hold if not already held
+                                diceToHold[i] = true;
+                                heldSomethingForFallback = true;
+                                Console.WriteLine($"Fallback: Holding {val} for available upper section.");
+                            }
+                        }
+                    }
+                }
+                if (heldSomethingForFallback) {
+                     Console.WriteLine($"Final Hold Decision (Fallback - Upper): [{string.Join(", ", diceToHold)}]");
+                     return diceToHold;
+                }
+
+                // If Chance is available, hold highest dice
+                if (availableCategories[Yacht.INDEX_CHANCE]) {
+                    int highestDie = 0;
+                    for(int i=0; i<5; i++) if(currentDiceValues[i] > highestDie) highestDie = currentDiceValues[i];
+                    
+                    if (highestDie > 0) {
+                         for(int i=0; i<5; i++) {
+                            if (currentDiceValues[i] == highestDie) { // Hold all instances of the highest die
+                                diceToHold[i] = true;
+                                heldSomethingForFallback = true;
+                            }
+                        }
+                        if (heldSomethingForFallback) {
+                            Console.WriteLine($"Fallback: Holding highest dice ({highestDie}) for Chance.");
+                            Console.WriteLine($"Final Hold Decision (Fallback - Chance): [{string.Join(", ", diceToHold)}]");
+                            return diceToHold;
+                        }
+                    }
+                }
+            }
+
+            // 9. Default behavior (If nothing else, and on roll 2, hold highest if Chance is available, otherwise hold nothing)
+            Console.WriteLine("Evaluating: Default Behavior (Final Fallback)");
+            if (rollNumber == 2) // Only apply this very conservative step on the second roll
+            {
+                if (availableCategories[Yacht.INDEX_CHANCE])
+                {
+                    int highestDieValue = 0;
+                    int highestDieIndex = -1;
+                    for (int i = 0; i < 5; i++)
+                    {
+                        if (currentDiceValues[i] > highestDieValue)
+                        {
+                            highestDieValue = currentDiceValues[i];
+                            highestDieIndex = i;
+                        }
+                    }
+                    if (highestDieIndex != -1)
+                    {
+                        Console.WriteLine($"Default (Roll 2, Chance available): Holding highest die {highestDieValue}");
+                        diceToHold[highestDieIndex] = true; // Hold only one instance of the highest
+                    }
+                } else {
+                    Console.WriteLine($"Default (Roll 2, Chance NOT available): Holding nothing.");
+                    // diceToHold remains all false
+                }
+            } else if (rollNumber == 1 && CountHeld(diceToHold) == 0) {
+                 Console.WriteLine($"Default (Roll 1, nothing held yet): Holding nothing. Re-roll all.");
+                 // diceToHold remains all false
+            }
+            
+            Console.WriteLine($"Final Hold Decision (End of Logic): [{string.Join(", ", diceToHold)}]");
             return diceToHold;
         }
 
@@ -591,8 +689,12 @@ Console.WriteLine($"[PRE-CHECK LGS] availableCategories[10] = {availableCategori
             int score = 0;
             bool isYachtzeeCurrentDice = sortedDiceValues[0] == sortedDiceValues[1] && sortedDiceValues[1] == sortedDiceValues[2] && sortedDiceValues[2] == sortedDiceValues[3] && sortedDiceValues[3] == sortedDiceValues[4];
             
-            if (isYachtzeeCurrentDice && categoryIndex == Yacht.INDEX_YACHT) {
+            if (isYachtzeeCurrentDice && categoryIndex == Yacht.INDEX_YACHT && availableCategories[Yacht.INDEX_YACHT]) { // Ensure category is available
                  return 50;
+            }
+            else if (isYachtzeeCurrentDice && categoryIndex == Yacht.INDEX_YACHT && !availableCategories[Yacht.INDEX_YACHT]) {
+                 // Trying to score Yachtzee in Yachtzee category but it's already used. Score 0.
+                 return 0;
             }
 
             // Joker Rules Application (if current dice are a Yachtzee and Yachtzee category has been scored)
@@ -683,8 +785,9 @@ Console.WriteLine($"[PRE-CHECK LGS] availableCategories[10] = {availableCategori
                         score = 40;
                     // Joker rule handled above
                     break;
-                case Yacht.INDEX_YACHT: // Already handled if current dice are Yachtzee
-                    if (isYachtzeeCurrentDice) score = 50;
+                case Yacht.INDEX_YACHT: // Already handled if current dice are Yachtzee and category available
+                    if (isYachtzeeCurrentDice && availableCategories[Yacht.INDEX_YACHT]) score = 50; // Redundant due to earlier check, but safe
+                    else if (isYachtzeeCurrentDice && !availableCategories[Yacht.INDEX_YACHT]) score = 0; // Explicitly 0 if used
                     break;
                 case Yacht.INDEX_CHANCE:
                     for (int i_loop = 0; i_loop < 5; i_loop++) score += sortedDiceValues[i_loop]; 
