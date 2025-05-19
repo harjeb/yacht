@@ -4,7 +4,7 @@
 
 ## 1. 架构概述
 
-Yacht 游戏模拟器采用以 Windows Forms 为中心的事件驱动架构。其核心模拟流程，经过最近的细化，允许用户通过 "手动单步模拟" 按钮点击，手动逐步执行计算机玩家回合中的每一个具体步骤。此外，还新增了允许用户手动输入5个骰子点数、**指定当前掷骰次数、当前上区总分以及手动选择哪些计分项对AI可用（通过一组CheckBoxes）**，并获取AI基于此完整上下文的保留建议的功能。虽然没有严格的分层，但可以观察到以下概念层：
+Yacht 游戏模拟器采用以 Windows Forms 为中心的事件驱动架构。其核心模拟流程，经过最近的细化，允许用户通过 "手动单步模拟" 按钮点击，手动逐步执行计算机玩家回合中的每一个具体步骤。此外，还新增了允许用户手动输入5个骰子点数、**指定当前掷骰次数、当前上区总分以及通过界面上的13个复选框精确控制在请求AI保留骰子建议时哪些Yacht计分类别是可用的**，并获取AI基于此完整上下文的保留建议的功能。虽然没有严格的分层，但可以观察到以下概念层：
 
 *   **表示层 (Presentation Layer):** 由 [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0) 处理，负责用户界面、事件处理（如按钮点击）以及统计数据的显示。
 *   **应用逻辑/领域层 (Application Logic/Domain Layer):**
@@ -63,10 +63,11 @@ Yacht 游戏模拟器采用以 Windows Forms 为中心的事件驱动架构。�
         *   **新增一个组合框或数字选择器 (`cmbRollNumber`) 供用户选择当前是第几次掷骰 (1, 2, 或 3)。**
         *   **新增一个文本输入框 (`txtCurrentUpperScore`) 供用户输入当前的上区总分。**
         *   提供一个“获取建议”按钮 (`btnGetHoldSuggestion`)。
-        *   当按钮点击时，读取输入框中的骰子点数、选择的掷骰次数和上区总分，进行验证。
+        *   **`btnGetHoldSuggestion_Click` 事件处理程序已被重构为多个更小的辅助方法，以提高代码的可读性和可维护性。**
+        *   当按钮点击时，重构后的逻辑会读取输入框中的骰子点数、选择的掷骰次数和上区总分，并进行验证。
         *   调用 `yYacht.SetManuallyEnteredDice()` 将验证后的骰子值传递给 `Yacht` 对象。
-        *   **新增13个 `CheckBox` 控件，每个对应一个计分项，允许用户手动选择哪些计分项对AI可用。**
-        *   **`btnGetHoldSuggestion_Click` 事件处理程序将读取这些 CheckBoxes 的状态，构建一个布尔数组 `availableCategoriesFromCheckboxes`。**
+        *   **界面上新增一个 `GroupBox` 控件，内含13个 `CheckBox` 控件，每个对应一个Yacht计分项，允许用户手动选择哪些计分项对AI在提供保留建议时可用。**
+        *   **重构后的 `btnGetHoldSuggestion_Click` 相关逻辑将读取这些 `CheckBox` 的状态，构建一个布尔数组 `availableCategoriesFromCheckboxes`。**
         *   **在此流程中，不再调用 `yYacht.GetPlayerAvailableCategories(0)` 来获取可用计分项。**
         *   调用 `compPlayer.DecideDiceToHold(currentDiceValues, rollNumber, availableCategoriesFromCheckboxes, currentUpperScore)`，传递所有收集到的上下文信息。
         *   接收 `Computer.cs` 返回的建议保留的骰子 (boolean array)。
@@ -201,4 +202,4 @@ sequenceDiagram
 
 ## 5. 总结
 
-Yacht 游戏模拟器的架构以功能为中心，模块化程度合理。[`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0) 作为表示层和精细控制中心，管理回合内步骤的状态机（用于逐步模拟）和处理用户直接输入（用于手动骰子建议，现在包含掷骰次数、上区得分 **以及通过CheckBoxes手动选择的可用计分项**），并协调对其他模块的调用。[`ComputerYacht/Yacht.cs`](ComputerYacht/Yacht.cs:0) 封装核心游戏规则和状态。[`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0) 实现AI决策逻辑，其 `DecideDiceToHold` 方法现在可以处理更丰富的游戏上下文（包括掷骰次数、上区得分和用户指定的可用计分项）来进行决策。[`ComputerYacht/Dice.cs`](ComputerYacht/Dice.cs:0) 提供概率计算支持。
+Yacht 游戏模拟器的架构以功能为中心，模块化程度合理。[`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0) 作为表示层和精细控制中心，管理回合内步骤的状态机（用于逐步模拟）和处理用户直接输入（用于手动骰子建议，现在包含掷骰次数、上区得分 **以及通过界面上的13个复选框手动选择的可用计分项**），并协调对其他模块的调用。**`btnGetHoldSuggestion_Click` 方法已被重构以提高清晰度。**[`ComputerYacht/Yacht.cs`](ComputerYacht/Yacht.cs:0) 封装核心游戏规则和状态。[`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0) 实现AI决策逻辑，其 `DecideDiceToHold` 方法现在可以处理更丰富的游戏上下文（包括掷骰次数、上区得分和用户指定的可用计分项）来进行决策。[`ComputerYacht/Dice.cs`](ComputerYacht/Dice.cs:0) 提供概率计算支持。

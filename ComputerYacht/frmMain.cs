@@ -11,12 +11,12 @@ namespace ComputerYacht
 	public enum TurnStepPhase // This enum might be less relevant for the new feature but kept for now.
 	{
 		READY_FOR_ROLL_1,
-		AWAITING_HOLD_DECISION_1, 
+		AWAITING_HOLD_DECISION_1,
 		READY_FOR_ROLL_2,
-		AWAITING_HOLD_DECISION_2, 
+		AWAITING_HOLD_DECISION_2,
 		READY_FOR_ROLL_3,
-		AWAITING_SCORING_DECISION, 
-		TURN_COMPLETED, 
+		AWAITING_SCORING_DECISION,
+		TURN_COMPLETED,
 		GAME_OVER
 	}
 
@@ -26,18 +26,41 @@ namespace ComputerYacht
 		private int[] currentDiceValues = new int[5]; // Kept for potential future re-integration
 		private bool[] currentHeldDice = new bool[5]; // Kept for potential future re-integration
 		private Computer compPlayer = new Computer(); // AI Player instance
+		private CheckBox[] categoryCheckBoxes; // Array to hold scoring category checkboxes
 
 		// Token: 0x0600004E RID: 78 RVA: 0x0000410C File Offset: 0x0000230C
 		public frmMain()
 		{
 			this.InitializeComponent();
+			this.InitializeCategoryCheckBoxArray(); // Initialize the checkbox array
+		}
+
+		private void InitializeCategoryCheckBoxArray()
+		{
+			// Assuming Yacht.NUM_CATEGORIES is 13, corresponding to the 13 selectable scoring categories.
+			// The order here must match the order expected by the AI if it uses a 0-12 indexed array.
+			categoryCheckBoxes = new CheckBox[] {
+				chkCatOnes,           // Index 0
+				chkCatTwos,           // Index 1
+				chkCatThrees,         // Index 2
+				chkCatFours,          // Index 3
+				chkCatFives,          // Index 4
+				chkCatSixes,          // Index 5
+				chkCatThreeOfAKind,   // Index 6
+				chkCatFourOfAKind,    // Index 7
+				chkCatFullHouse,      // Index 8
+				chkCatSmStraight,     // Index 9
+				chkCatLgStraight,     // Index 10
+				chkCatYachtzee,       // Index 11
+				chkCatChance          // Index 12
+			};
 		}
 
 		// Token: 0x0600004F RID: 79 RVA: 0x00004164 File Offset: 0x00002364
 		private void frmMain_Load(object sender, EventArgs e)
 		{
 			this.loComp.Add(8);
-			this.InitializeNewGame(); 
+			this.InitializeNewGame();
 			if (File.Exists("Games.txt"))
 			{
 				File.Delete("Games.txt");
@@ -56,7 +79,7 @@ namespace ComputerYacht
 		private void WriteScoresToFile()
 		{
 			StringBuilder stringBuilder = new StringBuilder();
-			for (int i = 0; i <= 13; i++)
+			for (int i = 0; i <= 13; i++) // CARD_LABELS has 14 items, yYacht.GetScore might expect up to index 13 (Chance)
 			{
 				stringBuilder.Append(this.yYacht.GetScore(0, i) + "\t");
 			}
@@ -65,14 +88,14 @@ namespace ComputerYacht
 		}
 
 		// Token: 0x06000052 RID: 82 RVA: 0x00004240 File Offset: 0x00002440
-		private void ResetYacht(Yacht Yacht) 
+		private void ResetYacht(Yacht Yacht)
 		{
 			Yacht.SetupGame(new string[]
 			{
 				"Computer"
 			}, new Computer[]
 			{
-				this.compPlayer 
+				this.compPlayer
 			});
 		}
 
@@ -105,18 +128,30 @@ namespace ComputerYacht
 			// Reset new controls
 			if (cmbRollNumber != null) cmbRollNumber.SelectedIndex = 0; // Default to "1"
 			if (txtCurrentUpperScore != null) txtCurrentUpperScore.Text = "0";
+
+			// Initialize scoring category checkboxes
+			if (categoryCheckBoxes != null)
+			{
+				for (int i = 0; i < categoryCheckBoxes.Length; i++)
+				{
+					if (categoryCheckBoxes[i] != null)
+					{
+						categoryCheckBoxes[i].Checked = true;
+					}
+				}
+			}
 		}
 
 		private void UpdateStatusMessage(string message)
 		{
-		          Console.WriteLine("Status: " + message); 
+			Console.WriteLine("Status: " + message);
 		}
 
 		// Token: 0x06000053 RID: 83 RVA: 0x00004274 File Offset: 0x00002474
 		private void WriteHeaderToFile()
 		{
 			StringBuilder stringBuilder = new StringBuilder();
-			for (int i = 0; i <= 13; i++)
+			for (int i = 0; i <= 13; i++) // CARD_LABELS has 14 items
 			{
 				stringBuilder.Append(frmMain.CARD_LABELS[i] + "\t");
 			}
@@ -170,55 +205,181 @@ namespace ComputerYacht
 			// ... (original content of btnPause_Click method)
 		}
 		*/
-		private void btnGetHoldSuggestion_Click(object sender, EventArgs e)
+		private bool TryParseDiceInput(out int[] diceValues)
 		{
-			int[] manualDiceArray = new int[5];
+			diceValues = new int[5];
 			TextBox[] diceTextBoxes = { txtDice1, txtDice2, txtDice3, txtDice4, txtDice5 };
 
 			for (int i = 0; i < 5; i++)
 			{
+				if (diceTextBoxes[i] == null) // Defensive check
+				{
+					MessageBox.Show($"骰子 {i + 1} 对应的文本框控件不存在。", "内部错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+					Console.WriteLine($"[DEBUG frmMain] txtDice{i + 1} is null.");
+					return false;
+				}
 				if (!int.TryParse(diceTextBoxes[i].Text, out int diceValue) || diceValue < 1 || diceValue > 6)
 				{
 					MessageBox.Show($"骰子 {i + 1} 的输入无效。请输入1到6之间的数字。", "输入错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-					return;
+					Console.WriteLine($"[DEBUG frmMain] Invalid dice input for dice {i + 1}, value: '{diceTextBoxes[i].Text}'.");
+					return false;
 				}
-				manualDiceArray[i] = diceValue;
+				diceValues[i] = diceValue;
 			}
+			Console.WriteLine($"[DEBUG frmMain] Parsed dice array: [{string.Join(", ", diceValues)}]");
+			return true;
+		}
 
-			// Read roll number
-			if (cmbRollNumber.SelectedItem == null || !int.TryParse(cmbRollNumber.SelectedItem.ToString(), out int rollNumber) || rollNumber < 1 || rollNumber > 3)
+		// Helper method to parse roll number
+		private bool TryParseRollNumber(out int rollNumber)
+		{
+			rollNumber = 0;
+			if (cmbRollNumber == null) // Defensive check
+			{
+				MessageBox.Show("掷骰次数下拉框控件不存在。", "内部错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				Console.WriteLine("[DEBUG frmMain] cmbRollNumber is null.");
+				return false;
+			}
+			if (cmbRollNumber.SelectedItem == null || !int.TryParse(cmbRollNumber.SelectedItem.ToString(), out rollNumber) || rollNumber < 1 || rollNumber > 3)
 			{
 				MessageBox.Show("请选择有效的掷骰次数 (1, 2, 或 3)。", "输入错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				Console.WriteLine("[DEBUG frmMain] Invalid roll number selected.");
+				return false;
+			}
+			Console.WriteLine($"[DEBUG frmMain] Parsed roll number: {rollNumber}");
+			return true;
+		}
+
+		// Helper method to parse current upper score
+		private bool TryParseUpperScore(out int upperScore)
+		{
+			upperScore = 0;
+			if (txtCurrentUpperScore == null) // Defensive check
+			{
+				MessageBox.Show("上区总分文本框控件不存在。", "内部错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				Console.WriteLine("[DEBUG frmMain] txtCurrentUpperScore is null.");
+				return false;
+			}
+			if (!int.TryParse(txtCurrentUpperScore.Text, out upperScore) || upperScore < 0)
+			{
+				MessageBox.Show("请输入有效的当前上区总分 (非负整数)。", "输入错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				Console.WriteLine($"[DEBUG frmMain] Invalid upper score input: '{txtCurrentUpperScore.Text}'.");
+				return false;
+			}
+			Console.WriteLine($"[DEBUG frmMain] Parsed current upper score: {upperScore}");
+			return true;
+		}
+
+		// Helper method to get available categories from checkboxes
+		private bool[] GetAvailableCategoriesFromCheckboxes()
+		{
+			bool[] availableCategories = new bool[Yacht.NUM_CATEGORIES];
+			Console.WriteLine($"[DEBUG frmMain] categoryCheckBoxes is {(categoryCheckBoxes == null ? "NULL" : "NOT NULL")}");
+
+			if (categoryCheckBoxes != null)
+			{
+				Console.WriteLine($"[DEBUG frmMain] categoryCheckBoxes.Length: {categoryCheckBoxes.Length}, Yacht.NUM_CATEGORIES: {Yacht.NUM_CATEGORIES}");
+			}
+
+			if (categoryCheckBoxes != null && categoryCheckBoxes.Length == Yacht.NUM_CATEGORIES)
+			{
+				Console.WriteLine("[DEBUG frmMain] Populating availableCategoriesFromCheckboxes array.");
+				for (int i = 0; i < Yacht.NUM_CATEGORIES; i++)
+				{
+					if (categoryCheckBoxes[i] != null)
+					{
+						availableCategories[i] = categoryCheckBoxes[i].Checked;
+					}
+					else
+					{
+						availableCategories[i] = false; // Default to false if a specific checkbox is null
+						Console.WriteLine($"[DEBUG frmMain] Warning: categoryCheckBoxes[{i}] is null. Defaulting to false for this category.");
+					}
+				}
+			}
+			else
+			{
+				Console.WriteLine("[DEBUG frmMain] categoryCheckBoxes array is null or length mismatch. Cannot determine available categories.");
+				MessageBox.Show("计分项复选框未正确初始化。", "内部错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				return null; // Indicate error
+			}
+
+
+			Console.WriteLine("[DEBUG frmMain] Checkbox States Before AI Call:");
+			if (categoryCheckBoxes != null && categoryCheckBoxes.Length == Yacht.NUM_CATEGORIES)
+			{
+				for (int i = 0; i < Yacht.NUM_CATEGORIES; i++)
+				{
+					if (categoryCheckBoxes[i] != null)
+					{
+						Console.WriteLine($"[DEBUG frmMain] {categoryCheckBoxes[i].Name} (Index {i}): Checked = {categoryCheckBoxes[i].Checked}");
+					}
+					else
+					{
+						Console.WriteLine($"[DEBUG frmMain] Checkbox at Index {i} is null.");
+					}
+				}
+			}
+			else
+			{
+				Console.WriteLine("[DEBUG frmMain] Cannot log all checkbox states: categoryCheckBoxes array is null or length mismatch.");
+			}
+
+			return availableCategories;
+		}
+
+		private void btnGetHoldSuggestion_Click(object sender, EventArgs e)
+		{
+			Console.WriteLine("[DEBUG frmMain] btnGetHoldSuggestion_Click START"); // Entry log
+
+			if (!TryParseDiceInput(out int[] manualDiceArray))
+			{
 				return;
 			}
 
-			// Read current upper score
-			if (!int.TryParse(txtCurrentUpperScore.Text, out int currentUpperScore) || currentUpperScore < 0)
+			if (!TryParseRollNumber(out int rollNumber))
 			{
-				MessageBox.Show("请输入有效的当前上区总分 (非负整数)。", "输入错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				return;
+			}
+
+			if (!TryParseUpperScore(out int currentUpperScore))
+			{
+				return;
+			}
+
+			bool[] availableCategoriesFromCheckboxes = GetAvailableCategoriesFromCheckboxes();
+			if (availableCategoriesFromCheckboxes == null)
+			{
+				// Error message already shown by GetAvailableCategoriesFromCheckboxes
 				return;
 			}
 
 			try
 			{
+				Console.WriteLine("[DEBUG frmMain] Inside try block, before SetManuallyEnteredDice.");
 				yYacht.SetManuallyEnteredDice(manualDiceArray);
-				// The AI needs to know which categories are still available to make a good decision.
-				// We'll get the currently available categories for player 0.
-				bool[] availableCategories = yYacht.GetPlayerAvailableCategories(0);
+				Console.WriteLine("[DEBUG frmMain] After SetManuallyEnteredDice.");
 
-				bool[] holdSuggestion = compPlayer.DecideDiceToHold(manualDiceArray, rollNumber, availableCategories, currentUpperScore);
+				Console.WriteLine("[DEBUG frmMain] Calling compPlayer.DecideDiceToHold...");
+				bool[] holdSuggestion = compPlayer.DecideDiceToHold(manualDiceArray, rollNumber, availableCategoriesFromCheckboxes, currentUpperScore);
+				Console.WriteLine($"[DEBUG frmMain] compPlayer.DecideDiceToHold returned. Hold suggestion: [{string.Join(", ", holdSuggestion)}]");
+
 				DisplayDiceHoldSuggestion(holdSuggestion);
 				UpdateStatusMessage("AI 保留建议已显示。");
 
-				// Update tbDices to show the manually entered dice and their hold status
-                this.tbDices.Text = this.yYacht.DicesToString(); 
+				this.tbDices.Text = this.yYacht.DicesToString();
+				Console.WriteLine("[DEBUG frmMain] btnGetHoldSuggestion_Click END (Successful)");
 			}
 			catch (ArgumentException ex)
 			{
 				MessageBox.Show($"处理骰子输入时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				Console.WriteLine($"[DEBUG frmMain] ArgumentException: {ex.Message}");
 			}
-			// The old game loop logic (switch statement based on currentPhase) is removed from this button.
-			// UpdateUI() is not called here as we are not progressing the game state, only providing a suggestion.
+			catch (Exception ex)
+			{
+				MessageBox.Show($"发生意外错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				Console.WriteLine($"[DEBUG frmMain] General Exception: {ex.ToString()}");
+			}
 		}
 
 		private void DisplayDiceHoldSuggestion(bool[] holdSuggestion)
@@ -250,10 +411,10 @@ namespace ComputerYacht
 			this.iTotalScore += playerScore;
 			if (playerScore > this.iMax) this.iMax = playerScore;
 			if (playerScore < this.iMin || this.iGames == 1) this.iMin = playerScore;
-			
-			if (this.yYacht.GetPlayerScoreForCategory(0, 12) > 0) this.iYachtzees++; // INDEX_YACHT
-			if (this.yYacht.GetPlayerScoreForCategory(0, 6) > 0) this.iBonuses++; // INDEX_TOPBONUS
-			
+
+			if (this.yYacht.GetPlayerScoreForCategory(0, Yacht.INDEX_YACHT) > 0) this.iYachtzees++; // Corrected constant
+			if (this.yYacht.GetPlayerScoreForCategory(0, Yacht.INDEX_TOPBONUS) > 0) this.iBonuses++;
+
 			int scoreBracket = playerScore / 100;
 			if (scoreBracket >= 0 && scoreBracket < this.iScoreCounts.Length)
 			{
@@ -289,21 +450,21 @@ namespace ComputerYacht
 			if (this.yYacht != null)
 			{
 				// For the new feature, tbDices might show the manually entered dice if SetManuallyEnteredDice updates yYacht's dice state
-                // And DicesToString() reflects that + hold suggestion.
-				this.tbDices.Text = this.yYacht.DicesToString(); 
+				// And DicesToString() reflects that + hold suggestion.
+				this.tbDices.Text = this.yYacht.DicesToString();
 				this.tbScores.Text = this.yYacht.PlayerToString(0); // This will show player 0's current card
-				
+
 				string turnInfo = $"回合: {yYacht.GetCurrentTurnNumber()}/13";
 				// The following phase-based logic might be less relevant for the suggestion feature
 				if (currentPhase != TurnStepPhase.GAME_OVER && currentPhase != TurnStepPhase.TURN_COMPLETED && yYacht.GetRollAttemptInTurn() > 0)
 				{
 					turnInfo += $"  掷骰次数: {yYacht.GetRollAttemptInTurn()}";
 				}
-		              else if (currentPhase == TurnStepPhase.GAME_OVER)
-		              {
-		                  turnInfo = "游戏结束";
-		              }
-		              Console.WriteLine(turnInfo); 
+				else if (currentPhase == TurnStepPhase.GAME_OVER)
+				{
+					turnInfo = "游戏结束";
+				}
+				Console.WriteLine(turnInfo);
 			}
 		}
 
@@ -346,20 +507,20 @@ namespace ComputerYacht
 		// Token: 0x0400007F RID: 127
 		public static string[] CARD_LABELS = new string[]
 		{
-			"Ones",
-			"Twos",
-			"Threes",
-			"Fours",
-			"Fives",
-			"Sixes",
-			"Bonus",
-			"ThreeOfAKind",
-			"FourOfAKind",
-			"FullHouse",
-			"SmStraight",
-			"LgStraight",
-			"Yacht",
-			"Chance"
+			"Ones",           // Index 0
+			"Twos",           // Index 1
+			"Threes",         // Index 2
+			"Fours",          // Index 3
+			"Fives",          // Index 4
+			"Sixes",          // Index 5
+			"Bonus",          // Index 6 - This is a score, not a category to choose for a turn.
+			"ThreeOfAKind",   // Index 7
+			"FourOfAKind",    // Index 8
+			"FullHouse",      // Index 9
+			"SmStraight",     // Index 10
+			"LgStraight",     // Index 11
+			"Yacht",          // Index 12 (Yachtzee)
+			"Chance"          // Index 13
 		};
 	}
 }

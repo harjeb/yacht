@@ -738,3 +738,150 @@ Defined UI changes (13 CheckBoxes) and logic modifications for [`ComputerYacht/f
 
 **Summary of Completion (Phase 25):**
 The Architect mode has successfully updated the [`memory-bank/architecture.md`](memory-bank/architecture.md:0) document to reflect the new feature allowing users to manually control AI's available scoring categories via UI CheckBoxes. This involved detailing changes to the UI ([`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0)), the logic for determining `availableCategories` within the "get hold suggestion" feature, and updating the relevant data flow diagrams and descriptions. All relevant Memory Bank support files ([`memory-bank/decisionLog.md`](memory-bank/decisionLog.md:0), [`memory-bank/activeContext.md`](memory-bank/activeContext.md:0), [`memory-bank/progress.md`](memory-bank/progress.md:0)) have also been updated. The architecture documentation is now prepared for the implementation of this new UI-driven category control feature.
+---
+## Task: Implement Manual Category Control for AI Hold Suggestions (Phase 26 - Code Implementation)
+
+**Overall Status:** COMPLETED
+**Timestamp:** 2025-05-19 09:20:31
+
+### Sub-tasks (Phase 26):
+
+1.  **Modify `ComputerYacht/frmMain.Designer.cs`:**
+    *   Status: COMPLETED
+    *   Notes: Added `grpScoringCategories` (GroupBox) and 13 `CheckBox` controls (e.g., `chkCatOnes` to `chkCatChance`) for each scoring category. Adjusted UI layout, control positions, TabIndex, and form's ClientSize to accommodate new elements.
+2.  **Modify `ComputerYacht/frmMain.cs`:**
+    *   Status: COMPLETED
+    *   Notes:
+        *   Added `private CheckBox[] categoryCheckBoxes;` member variable.
+        *   Implemented `private void InitializeCategoryCheckBoxArray()` method to initialize `categoryCheckBoxes` with references to the newly added CheckBox controls from the designer, ensuring the order matches the 13 primary scoring categories (Ones through Chance). This method is called in the `frmMain` constructor after `InitializeComponent()`.
+        *   Modified `InitializeNewGame()` to iterate through `categoryCheckBoxes` and set each `CheckBox.Checked = true`, ensuring all categories are selected by default when a new game starts.
+        *   Modified `btnGetHoldSuggestion_Click()`:
+            *   Removed the line `bool[] availableCategories = yYacht.GetPlayerAvailableCategories(0);`.
+            *   Added logic to create a new `bool[] availableCategoriesFromCheckboxes = new bool[Yacht.NUM_CATEGORIES];` (where `Yacht.NUM_CATEGORIES` is 13).
+            *   Iterated through the `categoryCheckBoxes` array and populated `availableCategoriesFromCheckboxes` based on the `Checked` state of each corresponding CheckBox.
+            *   Passed the `availableCategoriesFromCheckboxes` array to the `compPlayer.DecideDiceToHold()` method.
+3.  **Update Memory Bank - `activeContext.md`:**
+    *   Status: COMPLETED
+4.  **Update Memory Bank - `progress.md` (This update):**
+    *   Status: COMPLETED
+
+**Summary of Completion (Phase 26):**
+Successfully implemented the UI and logic for allowing users to manually control which scoring categories are available to the AI when requesting hold suggestions. Changes were made to `frmMain.Designer.cs` to add the necessary CheckBox controls within a GroupBox, and to `frmMain.cs` to initialize these controls, manage their state, and use their states to inform the AI's decision-making process. Memory Bank files (`activeContext.md`, `progress.md`) have been updated.
+---
+**Task:** Unit tests for Manual AI Hold Suggestion Scoring Categories (UI)
+**Timestamp (Start):** 2025-05-19 09:22 AM (approx.)
+**Status:** TDD Cycle Started
+**Details:** Began writing unit tests for `frmMain` focusing on `InitializeNewGame` and `btnGetHoldSuggestion_Click` related to category checkboxes.
+
+---
+**Task:** Unit tests for Manual AI Hold Suggestion Scoring Categories (UI)
+**Timestamp (End):** 2025-05-19 09:23 AM
+**Status:** TDD Cycle Completed
+**Details:** Successfully wrote three unit tests:
+1. `InitializeNewGame_SetsAllCategoryCheckBoxesToTrue`: Verifies all category checkboxes are checked on new game.
+2. `BtnGetHoldSuggestion_Click_BuildsAvailableCategoriesCorrectly`: Verifies `availableCategoriesFromCheckboxes` array is built correctly based on checkbox states.
+3. `BtnGetHoldSuggestion_Click_CallsDecideDiceToHoldWithCorrectCategories`: Verifies `compPlayer.DecideDiceToHold` is called with the correctly built `availableCategoriesFromCheckboxes`.
+**Files Modified:** [`ComputerYacht/frmMainTests.cs`](ComputerYacht/frmMainTests.cs:0)
+---
+## Task: Refactor `frmMain.cs` for Manual Category Control Feature (Phase 27 - Refinement &amp; Optimization)
+
+**Overall Status:** COMPLETED
+**Timestamp:** 2025-05-19 10:20:00 (Approximate time of completion)
+
+### Sub-tasks (Phase 27):
+
+1.  **Review `frmMain.cs` for `btnGetHoldSuggestion_Click` logic:**
+    *   Status: COMPLETED
+    *   Notes: Identified opportunities to extract input parsing and category gathering logic into separate helper methods.
+2.  **Extract Dice Input Parsing Logic:**
+    *   Status: COMPLETED
+    *   Notes: Created `private bool TryParseDiceInput(out int[] diceValues)` and moved relevant logic from `btnGetHoldSuggestion_Click` into it.
+3.  **Extract Roll Number Parsing Logic:**
+    *   Status: COMPLETED
+    *   Notes: Created `private bool TryParseRollNumber(out int rollNumber)` and moved relevant logic.
+4.  **Extract Upper Score Parsing Logic:**
+    *   Status: COMPLETED
+    *   Notes: Created `private bool TryParseUpperScore(out int upperScore)` and moved relevant logic.
+5.  **Extract Available Categories Logic:**
+    *   Status: COMPLETED
+    *   Notes: Created `private bool[] GetAvailableCategoriesFromCheckboxes()` and moved relevant logic.
+6.  **Update `btnGetHoldSuggestion_Click` to use helper methods:**
+    *   Status: COMPLETED
+    *   Notes: The main event handler is now more streamlined, calling the new helper methods.
+7.  **Update Memory Bank - `progress.md` (This update):**
+    *   Status: COMPLETED
+8.  **Update Memory Bank - `decisionLog.md`:**
+    *   Status: PENDING (to be done after this progress update)
+
+**Summary of Completion (Phase 27):**
+The `btnGetHoldSuggestion_Click` method in `ComputerYacht/frmMain.cs` has been refactored for improved readability and maintainability. Input parsing (dice values, roll number, upper score) and the logic for gathering available scoring categories from UI checkboxes have been extracted into separate private helper methods. This makes the main event handler more concise and focused on orchestrating these steps.
+2025-05-19 10:21:27 - 开始更新“手动控制AI保留建议的可用计分分类 (UI)”功能的文档。
+2025-05-19 10:22:58 - 完成更新“手动控制AI保留建议的可用计分分类 (UI)”功能的文档。
+- [系统集成器] [2025-05-19 10:24:00] 开始审查“手动控制AI保留建议的可用计分分类 (UI)”功能集成。
+- [系统集成器] [2025-05-19 10:24:00] 审查架构文档 ([`memory-bank/architecture.md`](memory-bank/architecture.md:0))。
+- [系统集成器] [2025-05-19 10:24:00] 审查 [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0) 代码实现。
+- [系统集成器] [2025-05-19 10:24:00] 审查 [`ComputerYacht/frmMain.Designer.cs`](ComputerYacht/frmMain.Designer.cs:0) UI 声明。
+- [系统集成器] [2025-05-19 10:24:00] 审查 [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0) AI 逻辑。
+- [系统集成器] [2025-05-19 10:24:00] 审查用户指南 ([`memory-bank/user_guide_snippets.md`](memory-bank/user_guide_snippets.md:0))。
+- [系统集成器] [2025-05-19 10:24:00] 确认开发者文档 ([`memory-bank/architecture.md`](memory-bank/architecture.md:0)) 与实现一致。
+* [2025-05-19 13:50:13] - [Code Task Status Update: Enhanced Checkbox Logging in frmMain.cs] Added comprehensive logging for all 13 category checkboxes' Name and Checked status within the `GetAvailableCategoriesFromCheckboxes` method in `ComputerYacht/frmMain.cs`. This change aims to help diagnose discrepancies between UI state and AI input.
+* [2025-05-19 14:35:40] - [Code Task Status Update: Enhanced Debug Logging for availableCategories] Completed modifications to aid debugging of `availableCategories` discrepancy. Removed old partial logging in `frmMain.cs` and added comprehensive logging of the received `availableCategories` array at the start of `DecideDiceToHold` in `Computer.cs`.
+<![CDATA[
+---
+## Task: Fix Compilation Errors in Computer.cs (Phase 28 - Debugging)
+
+**Overall Status:** COMPLETED
+**Timestamp:** 2025-05-19 14:52:34
+
+### Sub-tasks (Phase 28):
+
+1.  **Analyze Compilation Log for `Computer.cs`:**
+    *   Status: COMPLETED
+    *   Notes: Identified multiple errors (CS1002, CS1519, CS1031, CS8124, CS1026, CS1022) primarily related to incorrect method body structure for `DecideDiceToHold`.
+2.  **Inspect `Computer.cs` for Structural Issues:**
+    *   Status: COMPLETED
+    *   Notes: Confirmed missing opening brace after `DecideDiceToHold` signature and a misplaced opening brace later in the code.
+3.  **Fix Structural Issues in `Computer.cs`:**
+    *   Status: COMPLETED
+    *   Notes: Used `write_to_file` to add the correct opening brace after the `DecideDiceToHold` signature and remove the extraneous one.
+4.  **Update Memory Bank - `activeContext.md`:**
+    *   Status: COMPLETED
+5.  **Update Memory Bank - `decisionLog.md`:**
+    *   Status: COMPLETED
+6.  **Update Memory Bank - `progress.md` (This update):**
+    *   Status: COMPLETED
+
+**Summary of Completion (Phase 28):**
+Successfully fixed the primary structural compilation errors in [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0) by correcting the bracing of the `DecideDiceToHold` method. This is expected to resolve a large number of the reported compiler errors. Memory Bank files have been updated to reflect this fix.
+]]>
+---
+## Task: Fix Compilation Errors in Computer.cs (Phase 29 - Debugging CDATA)
+
+**Overall Status:** COMPLETED
+**Timestamp:** 2025-05-19 15:04:58
+
+### Sub-tasks (Phase 29):
+
+1.  **Analyze Compilation Log for `Computer.cs`:**
+    *   Status: COMPLETED
+    *   Notes: Confirmed errors likely due to file structure/parsing issues (CS1002, CS1519, CS1031, CS1022).
+2.  **Inspect `Computer.cs` for Structural Issues:**
+    *   Status: COMPLETED
+    *   Notes: Identified illegal `<![CDATA[` at the beginning and `]]>` at the end of the file.
+3.  **Fix Structural Issues in `Computer.cs`:**
+    *   Status: COMPLETED
+    *   Notes: Used `write_to_file` to remove the CDATA tags from the start and end of the file.
+4.  **Update Memory Bank - `activeContext.md`:**
+    *   Status: COMPLETED
+5.  **Update Memory Bank - `decisionLog.md`:**
+    *   Status: COMPLETED
+6.  **Update Memory Bank - `progress.md` (This update):**
+    *   Status: COMPLETED
+
+**Summary of Completion (Phase 29):**
+Successfully fixed the primary structural compilation errors in [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0) by removing the illegal CDATA wrapper tags. This is expected to resolve a large number of the reported compiler errors, allowing for a cleaner build. Memory Bank files have been updated to reflect this fix.
+* [2025-05-19 15:58:56] - [Code Task: Add Diagnostic Log for LgStraight] Added a `Console.WriteLine` to `Computer.cs` in `DecideDiceToHold` to log `availableCategories[10]` state prior to its use in subsequent logging. This helps debug an issue with Large Straight availability.
+* [2025-05-19 16:02:00] - [Code Task: Enhance Diagnostic Logging in Computer.cs] Modified a `Console.WriteLine` in `Computer.cs`'s `DecideDiceToHold` method to include index values for Small and Large Straight availability for better debugging. Status: COMPLETED.
+<![CDATA[
+* [2025-05-19 16:06:38] - [Code Task: Correct Yacht.cs Index Constants - COMPLETED] Fixed incorrect values for `INDEX_SMLSTRAIGHT`, `INDEX_LGESTRAIGHT`, `INDEX_YACHT`, and `INDEX_CHANCE` in `ComputerYacht/Yacht.cs`.
+]]>

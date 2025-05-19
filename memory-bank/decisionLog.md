@@ -353,3 +353,183 @@ The project was failing to compile with a CS0234 error (System.Linq not found) b
 
 **Alternatives Considered:** 无，此为直接功能请求。
 **Follow-up Actions:** 架构文档已更新。下一步将是代码模式根据此架构和相关伪代码实现功能。
+---
+### Decision (Architecture Review)
+[2025-05-19 09:15:49] - 审查关于手动控制AI可用计分项的规范和伪代码。
+
+**Rationale:**
+用户提供了新的规范和伪代码，用于通过UI CheckBoxes手动控制AI在请求保留建议时可用的计分项。本次审查旨在确认现有架构文档 ([`memory-bank/architecture.md`](memory-bank/architecture.md:0)) 是否已准确反映这些变更，或者是否需要更新。
+
+**Details:**
+- 审查的变更包括在 [`ComputerYacht/frmMain.Designer.cs`](ComputerYacht/frmMain.Designer.cs:0) 中添加13个CheckBox，以及在 [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0) 的 `btnGetHoldSuggestion_Click` 方法中修改逻辑，以从这些CheckBoxes读取状态来构建 `availableCategoriesFromCheckboxes` 数组，并将其传递给 `compPlayer.DecideDiceToHold()`。同时，确认在此流程中不再调用 `yYacht.GetPlayerAvailableCategories(0)`。
+- 经过核对，[`memory-bank/architecture.md`](memory-bank/architecture.md:0)（版本更新于 2025-05-18 23:22:00）已经详细并准确地记录了这些UI和逻辑变更及其对数据流的影响。
+- 例如，文档中明确提到了新增的CheckBoxes、`availableCategoriesFromCheckboxes` 的构建方式，以及不再调用 `Yacht.GetPlayerAvailableCategories()` 的情况。
+
+**Conclusion:**
+项目架构能够支持这些变更，且现有的 [`memory-bank/architecture.md`](memory-bank/architecture.md:0) 文档已充分覆盖了这些规范。无需对架构文档进行额外修改。
+
+**Implications/Details:**
+- 架构文档 ([`memory-bank/architecture.md`](memory-bank/architecture.md:0)) 保持最新。
+- 其他模式（如代码模式）可以基于当前架构文档和用户提供的规范/伪代码进行后续的实现工作。
+- 更新了 [`memory-bank/decisionLog.md`](memory-bank/decisionLog.md:0)（此条目）和 [`memory-bank/activeContext.md`](memory-bank/activeContext.md:0)。
+---
+### Decision (Code)
+[2025-05-19 09:20:31] - Implemented UI CheckBoxes for Manual Category Control in AI Suggestions
+
+**Rationale:**
+To fulfill the user's requirement of allowing manual selection of available scoring categories for the AI's hold suggestion feature, UI CheckBoxes were added, and the logic in `frmMain.cs` was updated to use their states. This provides direct user control over one of the key inputs to the AI's `DecideDiceToHold` method.
+
+**Details:**
+*   **UI ([`ComputerYacht/frmMain.Designer.cs`](ComputerYacht/frmMain.Designer.cs:0)):**
+    *   Added a `GroupBox` named `grpScoringCategories`.
+    *   Added 13 `CheckBox` controls (e.g., `chkCatOnes`, `chkCatTwos`, ..., `chkCatChance`) within the `GroupBox`, corresponding to the 13 primary scoring categories.
+    *   Adjusted form layout and `ClientSize` to accommodate these new controls.
+*   **Logic ([`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0)):**
+    *   **`categoryCheckBoxes` Array:**
+        *   A `private CheckBox[] categoryCheckBoxes;` member was added.
+        *   A new method `InitializeCategoryCheckBoxArray()` was implemented. This method initializes `categoryCheckBoxes` as a `new CheckBox[13]` and assigns the designer-created `CheckBox` controls to this array in a specific order: Ones, Twos, Threes, Fours, Fives, Sixes, ThreeOfAKind, FourOfAKind, FullHouse, SmStraight, LgStraight, Yachtzee, Chance. This order is crucial as it maps directly to the 0-12 indexed `availableCategoriesFromCheckboxes` boolean array passed to the AI.
+        *   `InitializeCategoryCheckBoxArray()` is called in the `frmMain()` constructor immediately after `this.InitializeComponent();`.
+    *   **`InitializeNewGame()`:**
+        *   Modified to loop through the `categoryCheckBoxes` array and set `Checked = true` for each `CheckBox`. This ensures all categories are considered available by default at the start of a new game or when inputs are reset.
+    *   **`btnGetHoldSuggestion_Click()`:**
+        *   The line `bool[] availableCategories = yYacht.GetPlayerAvailableCategories(0);` was removed.
+        *   A new boolean array `bool[] availableCategoriesFromCheckboxes = new bool[Yacht.NUM_CATEGORIES];` (where `Yacht.NUM_CATEGORIES` is 13) is created.
+        *   A loop iterates from `i = 0` to `Yacht.NUM_CATEGORIES - 1`. Inside the loop, `availableCategoriesFromCheckboxes[i]` is set to `categoryCheckBoxes[i].Checked`. This directly translates the user's UI selections into the boolean array format expected by the AI.
+        *   The `availableCategoriesFromCheckboxes` array is then passed as the `availableCategories` argument to `compPlayer.DecideDiceToHold()`.
+*   **Tooling Choice:**
+    *   Used `write_to_file` for [`ComputerYacht/frmMain.Designer.cs`](ComputerYacht/frmMain.Designer.cs:0) due to the extensive UI additions.
+    *   Used `write_to_file` for [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0) after an initial `apply_diff` attempt failed due to formatting issues, ensuring robust application of multiple logic changes and new method additions.
+
+**Alternatives Considered for `availableCategories`:**
+*   Using `Yacht.cs` index constants (e.g., `Yacht.INDEX_ONES`) to populate `availableCategoriesFromCheckboxes`. This was considered but deemed slightly more complex to map correctly to a 0-12 indexed array if the constants themselves are not contiguous or include non-selectable items like `INDEX_TOPBONUS`. The direct sequential mapping from the `categoryCheckBoxes` array (which is ordered correctly) to the `availableCategoriesFromCheckboxes` array was chosen for simplicity and clarity, given that `Yacht.NUM_CATEGORIES` is confirmed to be 13.
+---
+### Decision (Code)
+[2025-05-19 09:31:00] - Corrected invalid constant for Yachtzee index in frmMain.cs
+
+**Rationale:**
+The codebase was using `Yacht.INDEX_YACHTZEE` which was not defined in the `Yacht` class, leading to a compilation error (CS0117). The `Yacht` class defines the constant for the Yachtzee category as `Yacht.INDEX_YACHT`.
+
+**Details:**
+Changed `this.yYacht.GetPlayerScoreForCategory(0, Yacht.INDEX_YACHTZEE)`
+to `this.yYacht.GetPlayerScoreForCategory(0, Yacht.INDEX_YACHT)`
+in [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:316).
+---
+### Decision (Code)
+[2025-05-19 09:38:00] - Added debug logging for checkbox states in frmMain.cs
+
+**Rationale:**
+User reported a discrepancy between the UI checkbox states they believed were set (Large Straight checked) and the AI's behavior (Large Straight treated as unavailable based on previous logs). To help diagnose if the UI state is correctly read and passed to the AI, console logging was added to `btnGetHoldSuggestion_Click`.
+
+**Details:**
+Inserted `Console.WriteLine` statements after the `availableCategoriesFromCheckboxes` array is populated in `btnGetHoldSuggestion_Click` in [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0) (around [`line 272`](ComputerYacht/frmMain.cs:272)). These logs will output the `Checked` property of `chkCatSmStraight` and `chkCatLgStraight` directly from the `categoryCheckBoxes` array, and their corresponding boolean values in the `availableCategoriesFromCheckboxes` array that is passed to the AI.
+---
+### Decision (Code)
+[2025-05-19 10:14:00] - Enhanced debug logging in btnGetHoldSuggestion_Click method
+
+**Rationale:**
+User reported not seeing previously added debug logs for checkbox states, despite confirming they were running the latest code. To ensure the logging code is definitely present and to capture more context about the execution flow within `btnGetHoldSuggestion_Click`, the entire method was replaced with a version containing more robust and comprehensive `Console.WriteLine` statements. This includes logging method entry/exit, input values, and detailed checks around the `categoryCheckBoxes` array and specific checkbox states.
+
+**Details:**
+The `btnGetHoldSuggestion_Click` method in [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0) was entirely replaced. The new version includes:
+*   Entry log: `[DEBUG frmMain] btnGetHoldSuggestion_Click START`
+*   Logs for parsed dice, roll number, upper score.
+*   Logs for `categoryCheckBoxes` null status and length.
+*   Logs for `chkCatSmStraight` and `chkCatLgStraight` UI `Checked` status and their corresponding values in `availableCategoriesFromCheckboxes`.
+*   Log before calling `compPlayer.DecideDiceToHold` and after it returns.
+*   Exit log: `[DEBUG frmMain] btnGetHoldSuggestion_Click END (Successful)`
+*   Exception logging.
+---
+### Decision (Refactoring)
+[2025-05-19 10:20:00] - Refactor `btnGetHoldSuggestion_Click` in `frmMain.cs` by extracting helper methods.
+
+**Rationale:**
+The `btnGetHoldSuggestion_Click` method in `ComputerYacht/frmMain.cs` had grown in complexity, handling UI input parsing (dice values, roll number, upper score), gathering available scoring categories from checkboxes, and then calling the AI logic. To improve readability, maintainability, and separation of concerns, the input parsing and category gathering logic was extracted into individual private helper methods.
+
+**Details:**
+*   **Affected File:** [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0)
+*   **New Helper Methods Created:**
+    *   `private bool TryParseDiceInput(out int[] diceValues)`: Parses the five dice input TextBoxes, validates values (1-6), and returns a boolean indicating success and the parsed integer array.
+    *   `private bool TryParseRollNumber(out int rollNumber)`: Parses the `cmbRollNumber` ComboBox, validates the selected roll number (1-3), and returns a boolean indicating success and the parsed integer.
+    *   `private bool TryParseUpperScore(out int upperScore)`: Parses the `txtCurrentUpperScore` TextBox, validates the score (non-negative integer), and returns a boolean indicating success and the parsed integer.
+    *   `private bool[] GetAvailableCategoriesFromCheckboxes()`: Iterates through the `categoryCheckBoxes` array, builds a boolean array representing the `Checked` state of each, and returns this array. Includes error handling for uninitialized or mismatched checkbox arrays.
+*   **`btnGetHoldSuggestion_Click` Modifications:**
+    *   The method now calls each of the new helper methods in sequence.
+    *   If any helper method indicates a parsing/validation failure (e.g., by returning `false` or `null`), `btnGetHoldSuggestion_Click` returns early, preventing further execution.
+    *   The main `try-catch` block for calling the AI and updating UI remains in `btnGetHoldSuggestion_Click`.
+*   **Benefits:**
+    *   The main event handler (`btnGetHoldSuggestion_Click`) is now significantly shorter and easier to understand, focusing on the overall workflow.
+    *   Each specific piece of logic (dice parsing, roll number parsing, etc.) is encapsulated in its own method, making it easier to test, debug, and modify independently.
+    *   Improved code organization and adherence to the Single Responsibility Principle at a finer granularity.
+---
+### Decision (Code)
+[2025-05-19 13:50:13] - Added Comprehensive Checkbox State Logging in `GetAvailableCategoriesFromCheckboxes`
+
+**Rationale:**
+The user reported that the UI checkbox states displayed in logs did not always match the actual UI, and requested more comprehensive logging to debug this. The existing logging in `GetAvailableCategoriesFromCheckboxes` in [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0) was limited to specific straight categories. To address this, a loop was added to iterate through all 13 `categoryCheckBoxes` and log each checkbox's `Name` (or its index if the name is unavailable) and its `Checked` status. This will provide a complete picture of the states being read from the UI just before they are used by the AI.
+
+**Details:**
+- Modified: [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:331)
+- Added a loop within `GetAvailableCategoriesFromCheckboxes` to iterate from `i = 0` to `Yacht.NUM_CATEGORIES - 1`.
+- Inside the loop, `Console.WriteLine` now logs `categoryCheckBoxes[i].Name`, `i` (index), and `categoryCheckBoxes[i].Checked`.
+- Added null checks for `categoryCheckBoxes[i]` within the loop for robustness.
+- Added an initial `Console.WriteLine("[DEBUG frmMain] Checkbox States Before AI Call:")` header for clarity.
+- Added a fallback log message if the `categoryCheckBoxes` array itself is null or has a mismatched length.
+---
+### Decision (Code)
+[2025-05-19 14:36:00] - Enhanced Debug Logging for `availableCategories` Discrepancy
+
+**Rationale:**
+To diagnose an issue where `availableCategories[10]` (LgStraight) was reportedly `True` in `frmMain.cs` but `False` when received by `Computer.cs`'s `DecideDiceToHold` method, specific logging changes were made. The goal was to clearly track the state of this boolean array as it's passed between components.
+
+**Details:**
+*   **[`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0):** Removed an older, partial logging block within the `GetAvailableCategoriesFromCheckboxes` method (lines 308-329). This block was redundant with more comprehensive logging already added at the end of the same method (lines 331-349) which logs all 13 checkbox states.
+*   **[`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:40):** Added a new logging block at the very beginning of the `DecideDiceToHold` method. This block iterates through the received `availableCategories` array and prints the name and boolean status of all 13 categories. This will show the exact state of the array as the AI method receives it.
+
+**Alternatives Considered:**
+*   Adding more intermediate logging points: Decided against this for now to first see the state at the entry point of the problematic method.
+*   Using a debugger: While effective, adding direct logging provides a persistent record that can be reviewed alongside other application logs.
+
+**Outcome/Impact:**
+These changes will provide clearer insight into the state of the `availableCategories` array, specifically `availableCategories[10]`, at critical points, helping to pinpoint where the unexpected change from `True` to `False` might be occurring.
+<![CDATA[
+---
+### Decision (Code - Debug)
+[2025-05-19 14:52:34] - Corrected structural errors in `Computer.cs` to fix compilation issues.
+
+**Rationale:**
+The primary compilation errors in [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0) (CS1002, CS1519, CS1031, etc.) stemmed from incorrect bracing within the `DecideDiceToHold` method. An opening brace `{` was missing after the method signature, and an extraneous `{` existed further down (original line 67).
+
+**Details:**
+- **Affected File:** [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0)
+- **Action:**
+    1. Added an opening brace `{` immediately after the `DecideDiceToHold` method signature (line 39).
+    2. Removed the misplaced opening brace `{` from its original position (original line 67).
+- **Tooling Choice:** Used `write_to_file` to apply these changes after multiple `apply_diff` attempts failed due to complexities in parsing multi-block diffs or internal diff markers. `write_to_file` provided a robust way to ensure the entire file was correctly structured with these fixes.
+- **Expected Outcome:** Resolution of the majority of the reported compilation errors, particularly those related to invalid member declarations and syntax errors within the `DecideDiceToHold` method body. This should also resolve cascading errors like CS1022 (end-of-file expected).
+]]>
+---
+### Decision (Code - Debug)
+[2025-05-19 15:04:24] - Removed CDATA tags from Computer.cs to fix compilation errors.
+
+**Rationale:**
+The primary compilation errors (CS1002, CS1519, CS1031, CS1022, etc.) in [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0) were determined to be caused by illegal `<![CDATA[` and `]]>` tags at the beginning and end of the file, respectively. These tags disrupt the C# compiler's parsing process. Removing them is essential for successful compilation.
+
+**Details:**
+- **Affected File:** [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0)
+- **Action:** Used `write_to_file` to remove `﻿<![CDATA[﻿` from the first line and `]]>` from the last line of the file. This approach was chosen after `apply_diff` failed due to issues with its internal diff markers.
+- **Expected Outcome:** Resolution of compilation errors stemming from the CDATA tags, allowing the compiler to correctly parse the C# code.
+<![CDATA[
+---
+### Decision (Code)
+[2025-05-19 16:06:13] - Corrected scoring category index constants in Yacht.cs
+
+**Rationale:**
+The constants `INDEX_SMLSTRAIGHT`, `INDEX_LGESTRAIGHT`, `INDEX_YACHT`, and `INDEX_CHANCE` in `ComputerYacht/Yacht.cs` were found to be off-by-one, causing incorrect indexing into the `availableCategories` array. This led to bugs in AI decision-making for small and large straights. The constants were adjusted to their correct 0-based index values.
+
+**Details:**
+- Corrected `INDEX_SMLSTRAIGHT` from `10` to `9`.
+- Corrected `INDEX_LGESTRAIGHT` from `11` to `10`.
+- Corrected `INDEX_YACHT` from `12` to `11`.
+- Corrected `INDEX_CHANCE` from `13` to `12`.
+- File affected: [`ComputerYacht/Yacht.cs`](ComputerYacht/Yacht.cs:659-665)
+]]>

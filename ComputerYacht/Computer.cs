@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Linq;
 
 namespace ComputerYacht
@@ -37,11 +37,40 @@ namespace ComputerYacht
 
         #region New AI Decision Methods
         public bool[] DecideDiceToHold(int[] currentDiceValues, int rollNumber, bool[] availableCategories, int currentUpperScore)
-        {
+        { // Added opening brace
+            // New logging block
+            Console.WriteLine("[DEBUG Computer.cs DecideDiceToHold] Received availableCategoriesParam states:");
+            for (int i = 0; i < availableCategories.Length; i++) // Corrected to use 'availableCategories'
+            {
+                string categoryName;
+                switch (i)
+                {
+                    // These indices directly map to Yacht.INDEX_* constants if they are 0-12 contiguous
+                    // For clarity and robustness, using explicit mapping.
+                    case 0: categoryName = "Ones"; break;         // Yacht.INDEX_ONES
+                    case 1: categoryName = "Twos"; break;         // Yacht.INDEX_TWOS
+                    case 2: categoryName = "Threes"; break;       // Yacht.INDEX_THREES
+                    case 3: categoryName = "Fours"; break;        // Yacht.INDEX_FOURS
+                    case 4: categoryName = "Fives"; break;        // Yacht.INDEX_FIVES
+                    case 5: categoryName = "Sixes"; break;        // Yacht.INDEX_SIXES
+                    case 6: categoryName = "3KIND"; break;        // Yacht.INDEX_3KIND
+                    case 7: categoryName = "4KIND"; break;        // Yacht.INDEX_4KIND
+                    case 8: categoryName = "FullHouse"; break;    // Yacht.INDEX_FULLHOUSE
+                    case 9: categoryName = "SmStraight"; break;   // Yacht.INDEX_SMLSTRAIGHT
+                    case 10: categoryName = "LgStraight"; break;  // Yacht.INDEX_LGESTRAIGHT
+                    case 11: categoryName = "Yachtzee"; break;    // Yacht.INDEX_YACHT
+                    case 12: categoryName = "Chance"; break;      // Yacht.INDEX_CHANCE
+                    default: categoryName = $"Unknown_Index_{i}"; break;
+                }
+                Console.WriteLine($"[DEBUG Computer.cs DecideDiceToHold] Index {i} ({categoryName}): {availableCategories[i]}");
+            }
+            // End of new logging block
+            // Removed erroneous opening brace from original line 67
             Console.WriteLine($"DecideDiceToHold START");
             Console.WriteLine($"Dice: [{string.Join(", ", currentDiceValues)}]");
             Console.WriteLine($"Roll Number: {rollNumber}");
-            Console.WriteLine($"Small Straight Available: {availableCategories[Yacht.INDEX_SMLSTRAIGHT]}, Large Straight Available: {availableCategories[Yacht.INDEX_LGESTRAIGHT]}");
+Console.WriteLine($"[PRE-CHECK LGS] availableCategories[10] = {availableCategories[10]}");
+            Console.WriteLine($"Small Straight Available (idx {Yacht.INDEX_SMLSTRAIGHT}): {availableCategories[Yacht.INDEX_SMLSTRAIGHT]}, Large Straight Available (idx {Yacht.INDEX_LGESTRAIGHT}): {availableCategories[Yacht.INDEX_LGESTRAIGHT]}");
             Console.WriteLine($"Current Upper Score: {currentUpperScore}");
 
             // Heuristic-based dice holding strategy.

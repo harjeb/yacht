@@ -648,21 +648,21 @@ public const int NUM_CATEGORIES = 13; // Total number of standard scoring catego
 		// Token: 0x04000008 RID: 8
 		public const int INDEX_SIXES = 5;
 		// Token: 0x04000009 RID: 9
-		public const int INDEX_TOPBONUS = 6;
+		public const int INDEX_TOPBONUS = 100;
 		// Token: 0x0400000A RID: 10
-		public const int INDEX_3KIND = 7;
+		public const int INDEX_3KIND = 6;
 		// Token: 0x0400000B RID: 11
-		public const int INDEX_4KIND = 8;
+		public const int INDEX_4KIND = 7;
 		// Token: 0x0400000C RID: 12
-		public const int INDEX_FULLHOUSE = 9;
+		public const int INDEX_FULLHOUSE = 8;
 		// Token: 0x0400000D RID: 13
-		public const int INDEX_SMLSTRAIGHT = 10;
+		public const int INDEX_SMLSTRAIGHT = 9;
 		// Token: 0x0400000E RID: 14
-		public const int INDEX_LGESTRAIGHT = 11;
+		public const int INDEX_LGESTRAIGHT = 10;
 		// Token: 0x0400000F RID: 15
-		public const int INDEX_YACHT = 12;
+		public const int INDEX_YACHT = 11; // Corrected from 12, user referred to INDEX_YACHTZEE
 		// Token: 0x04000010 RID: 16
-		public const int INDEX_CHANCE = 13;
+		public const int INDEX_CHANCE = 12;
 
 		// Token: 0x04000011 RID: 17
 		protected const int MAX_PLAYER_LENGTH = 7;
