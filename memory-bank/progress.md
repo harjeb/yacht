@@ -943,3 +943,35 @@ The review of the scoring logic across `Computer.cs`, `Yacht.cs`, and `frmMain.c
 
 **Summary of Completion (Phase 31):**
 The `DecideDiceToHold` method in [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0) has been successfully modified to make AI dice retention decisions strictly based on available scoring categories. This change is intended to make the AI's play more strategically sound according to the game state.
+---
+## Task: Implement AI Auto-Scoring after Third Roll (Phase 32 - Code Implementation)
+
+**Overall Status:** COMPLETED
+**Timestamp:** 2025-05-19 18:07:00
+
+### Sub-tasks (Phase 32):
+
+1.  **Add `ChooseBestCategoryAndCalcScore` to `Computer.cs`:**
+    *   Status: COMPLETED
+    *   Notes: Created new public method `ChooseBestCategoryAndCalcScore(int[] finalDice, bool[] currentAvailableCategories, int currentUpperScore)` that wraps the existing `ChooseScoreCategory` logic and returns a `Tuple<int, int>` containing the chosen category index and score.
+2.  **Add `GetPlayerUpperScore` to `Yacht.cs`:**
+    *   Status: COMPLETED
+    *   Notes: Created new public method `GetPlayerUpperScore(int player)` to calculate and return the sum of a player's scores in the upper section (Ones to Sixes).
+3.  **Modify `btnGetHoldSuggestion_Click` in `frmMain.cs` for Auto-Scoring:**
+    *   Status: COMPLETED
+    *   Notes:
+        *   Added logic within the `if (rollNumber == 3)` block.
+        *   Calls `compPlayer.ChooseBestCategoryAndCalcScore` to get the AI's scoring decision.
+        *   Calls `yYacht.ApplyScoreAndFinalizeTurn` to record the score and update game state.
+        *   Updates UI: disables the scored category's checkbox, calls `UpdateUI()` to refresh the scoreboard, and displays a message to the user about the AI's action.
+        *   Handles game over state by calling `ProcessGameOver()`.
+        *   If game is not over, updates UI elements (roll number, category checkboxes) for the next turn/player.
+4.  **Update Memory Bank - `activeContext.md`:**
+    *   Status: COMPLETED
+5.  **Update Memory Bank - `decisionLog.md`:**
+    *   Status: COMPLETED
+6.  **Update Memory Bank - `progress.md` (This update):**
+    *   Status: COMPLETED
+
+**Summary of Completion (Phase 32):**
+The AI auto-scoring feature for the third roll has been successfully implemented. When the user selects "3" as the roll number in the "获取保留建议" UI, after the hold suggestion is displayed (which will be to hold all dice), the AI now automatically chooses the best available category, records the score, and updates the game state. The UI is refreshed to reflect these changes, including disabling the used category and preparing for the next turn or handling game over. All relevant Memory Bank files have been updated.

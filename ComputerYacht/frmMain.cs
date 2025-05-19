@@ -367,7 +367,74 @@ namespace ComputerYacht
 				DisplayDiceHoldSuggestion(holdSuggestion);
 				UpdateStatusMessage("AI 保留建议已显示。");
 
-				this.tbDices.Text = this.yYacht.DicesToString();
+				this.tbDices.Text = this.yYacht.DicesToString(); // Update dice display
+
+				if (rollNumber == 3)
+				{
+					UpdateStatusMessage("第三轮掷骰完成，AI 正在选择计分项...");
+					Console.WriteLine("[DEBUG frmMain] Roll 3 - AI choosing category to score.");
+
+					int[] finalDice = yYacht.GetCurrentDiceValues(); // Get dice from yYacht state set by SetManuallyEnteredDice
+					int currentPlayer = yYacht.GetPlayerIndex(); // Assuming yYacht tracks the current player for scoring context
+					
+					// For actual scoring, AI should use the game's real available categories and upper score.
+					// However, the spec for ChooseBestCategoryAndCalcScore takes these as parameters.
+					// We'll use availableCategoriesFromCheckboxes and currentUpperScore from UI for now,
+					// as per the context of btnGetHoldSuggestion_Click.
+					// bool[] actualAvailableCategories = yYacht.GetPlayerAvailableCategories(currentPlayer);
+					// int actualCurrentUpperScore = yYacht.GetPlayerUpperScore(currentPlayer);
+
+					Tuple<int, int> decision = compPlayer.ChooseBestCategoryAndCalcScore(finalDice, availableCategoriesFromCheckboxes, currentUpperScore);
+					int chosenCategoryIndex = decision.Item1;
+					int calculatedScore = decision.Item2;
+
+					Console.WriteLine($"[DEBUG frmMain] AI chose category index: {chosenCategoryIndex} with score: {calculatedScore}");
+
+					// Record the score in the game logic
+					// ApplyScoreAndFinalizeTurn also handles marking category as used and advancing turn/player
+					bool gameIsOver = yYacht.ApplyScoreAndFinalizeTurn(chosenCategoryIndex, calculatedScore);
+					
+					UpdateStatusMessage($"AI 在类别 {frmMain.CARD_LABELS[chosenCategoryIndex]} 中获得 {calculatedScore} 分。");
+					MessageBox.Show($"AI 在类别 {frmMain.CARD_LABELS[chosenCategoryIndex]} 中获得 {calculatedScore} 分。", "AI 计分", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+					// Update UI to reflect the scored category
+					if (categoryCheckBoxes != null && chosenCategoryIndex >= 0 && chosenCategoryIndex < categoryCheckBoxes.Length && categoryCheckBoxes[chosenCategoryIndex] != null)
+					{
+						categoryCheckBoxes[chosenCategoryIndex].Checked = false;
+						categoryCheckBoxes[chosenCategoryIndex].Enabled = false;
+						Console.WriteLine($"[DEBUG frmMain] Disabled checkbox for category: {frmMain.CARD_LABELS[chosenCategoryIndex]}");
+					}
+					
+					UpdateUI(); // Refresh scoreboard and other game info
+
+					if (gameIsOver)
+					{
+						ProcessGameOver(); // Handle game over statistics and messages
+						UpdateStatusMessage("游戏结束！可开始新游戏或查看统计。");
+						// Potentially disable further actions until InitializeNewGame or reset
+					}
+					else
+					{
+						// If not game over, the game state (turn, player) has advanced.
+						// For the "Get Suggestion" button, this means the context for the *next* suggestion
+						// would be for the *next* turn/player.
+						// We might want to reset some UI elements like roll number for the new turn.
+						if(cmbRollNumber != null) cmbRollNumber.SelectedIndex = 0; // Reset roll number to 1 for next potential turn
+				                    if(txtCurrentUpperScore != null) txtCurrentUpperScore.Text = yYacht.GetPlayerUpperScore(yYacht.GetPlayerIndex()).ToString(); // Update upper score for new current player
+
+						// Refresh available categories checkboxes based on the new game state
+						bool[] newAvailableCategories = yYacht.GetPlayerAvailableCategories(yYacht.GetPlayerIndex());
+						if (categoryCheckBoxes != null) {
+							for(int i=0; i < categoryCheckBoxes.Length; i++) {
+								if (categoryCheckBoxes[i] != null && i < newAvailableCategories.Length) {
+									categoryCheckBoxes[i].Checked = newAvailableCategories[i];
+									categoryCheckBoxes[i].Enabled = newAvailableCategories[i];
+								}
+							}
+						}
+				                    UpdateStatusMessage($"AI计分完毕。轮到玩家 {yYacht.GetPlayerIndex() + 1}, 回合 {yYacht.GetCurrentTurnNumber()}。");
+					}
+				}
 				Console.WriteLine("[DEBUG frmMain] btnGetHoldSuggestion_Click END (Successful)");
 			}
 			catch (ArgumentException ex)

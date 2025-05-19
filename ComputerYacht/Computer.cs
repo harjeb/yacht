@@ -797,9 +797,18 @@ Console.WriteLine($"[PRE-CHECK LGS] availableCategories[10] = {availableCategori
         }
         #endregion
 
+        public Tuple<int, int> ChooseBestCategoryAndCalcScore(int[] finalDice, bool[] currentAvailableCategories, int currentUpperScore)
+        {
+            // This method is very similar to ChooseScoreCategory, but returns a Tuple
+            // and takes currentUpperScore (though not directly used in this specific scoring logic here,
+            // it's included for consistency with the spec if future AI enhancements need it here).
 
-		// Token: 0x06000026 RID: 38 RVA: 0x00003258 File Offset: 0x00001458
-		protected bool ViableBonusScore(Yacht yYacht, int Score, int Index)
+            ScoringDecision decision = ChooseScoreCategory(finalDice, currentAvailableCategories);
+            return new Tuple<int, int>(decision.CategoryIndex, decision.Score);
+        }
+ 
+        // Token: 0x06000026 RID: 38 RVA: 0x00003258 File Offset: 0x00001458
+        protected bool ViableBonusScore(Yacht yYacht, int Score, int Index)
 		{
 			int num = 0;
 			int num2 = Score;

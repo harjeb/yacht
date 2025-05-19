@@ -554,6 +554,22 @@ namespace ComputerYacht
 			return this.iCurrentTurnNumber;
 		}
 
+		      public int GetPlayerUpperScore(int player)
+		      {
+		          if (player < 0 || player >= iNumberOfPlayers || iScores == null)
+		              return 0;
+
+		          int upperScore = 0;
+		          for (int i = INDEX_ONES; i <= INDEX_SIXES; i++)
+		          {
+		              if (iScores[player, i] > 0) // Only add if actually scored (not -1 or 0 if 0 was scored for an upper)
+		              {
+		                  upperScore += iScores[player, i];
+		              }
+		          }
+		          return upperScore;
+		      }
+
 		public string DicesToString()
 		{
 			string text = "";

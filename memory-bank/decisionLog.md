@@ -597,3 +597,27 @@ The user requested to modify the AI's dice holding strategy in `Computer.cs` to 
         - If Chance is available, hold the single highest die.
         - If Chance is not available, hold nothing.
     - For roll 1, if no other strategy holds dice, the default is to re-roll all.
+---
+### Decision (Code)
+[2025-05-19 18:07:00] - Implemented AI auto-scoring after third roll in `btnGetHoldSuggestion_Click`.
+
+**Rationale:**
+The user requested that the AI automatically select the best available scoring category and record the score after the third dice roll. Given the current UI structure where `btnGetHoldSuggestion_Click` handles dice input and AI suggestions, this was the most direct place to implement the auto-scoring logic when the selected roll number is 3. This approach leverages existing AI methods for choosing a category and existing game logic for applying scores.
+
+**Details:**
+*   **Affected Files:**
+    *   [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0): Added `ChooseBestCategoryAndCalcScore` method, which wraps `ChooseScoreCategory` to return a `Tuple<int, int>` (category index, score).
+    *   [`ComputerYacht/Yacht.cs`](ComputerYacht/Yacht.cs:0): Added `GetPlayerUpperScore(int player)` method to provide necessary context for the AI, although `ChooseBestCategoryAndCalcScore` doesn't directly use `currentUpperScore` in its current iteration for final scoring, it was part of the spec.
+    *   [`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0):
+        *   Modified `btnGetHoldSuggestion_Click`: If `rollNumber` (from UI) is 3, after displaying hold suggestions (which should be to hold all dice), the new logic is triggered.
+        *   It calls `compPlayer.ChooseBestCategoryAndCalcScore` using the dice values from the UI, the available categories from the UI checkboxes, and the upper score from the UI.
+        *   The chosen category and score are then applied using `yYacht.ApplyScoreAndFinalizeTurn`.
+        *   The UI (checkboxes, scoreboard) is updated to reflect the scored category and new game state.
+        *   A message is displayed to the user indicating the AI's choice and score.
+        *   If the game ends, `ProcessGameOver()` is called. Otherwise, UI elements like roll number and category checkboxes are updated for the next logical turn/player.
+
+**Alternatives Considered:**
+*   Creating a new, separate "AI Play Turn" button/flow: This would be a larger refactoring and UI change, deemed beyond the immediate scope of implementing the auto-scoring logic for the third roll. The current approach integrates the feature into the existing UI flow with minimal disruption, though it does change the behavior of `btnGetHoldSuggestion_Click` when roll 3 is selected.
+
+**Outcome/Impact:**
+When the user inputs dice for roll 3 and clicks "获取保留建议", the AI will now automatically select a scoring category, record the score, and update the game state and UI. This fulfills the core requirement of the task.

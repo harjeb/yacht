@@ -237,3 +237,14 @@
 * [2025-05-19 17:23:00] - [Code Update: Yachtzee Single Score Logic] Modified `Yacht.cs` in the `ScoreValue` method to remove the 100-point bonus for subsequent Yachtzees. Ensured that AI logic in `Computer.cs` (`DecideDiceToHold` and `CalculateScoreForCategory`) correctly handles scenarios where Yachtzee category is already used (deprioritizes holding for it, scores 0 if selected again). This aligns with the new rule that Yachtzee scores only once.
 ]]>
 * [2025-05-19 17:39:00] - [Code Update: `DecideDiceToHold` Logic Enhanced] Modified the `DecideDiceToHold` method in [`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:39) to ensure AI dice holding decisions are strictly based on currently available scoring categories. This includes adding availability checks for Four of a Kind, Full House, Three of a Kind, and refining logic for Pairs and fallback strategies. The aim is to align AI behavior more closely with optimal play given category availability, and specifically to ensure for dice `[2,2,2,2,6]` with only "Sixes" available, the AI holds `[F,F,F,F,T]`.
+* [2025-05-19 18:07:00] - [Code Update: AI Auto-Scoring on Roll 3]
+    *   **Task:** Implement AI auto-scoring after the third dice roll.
+    *   **Details:**
+        *   **[`ComputerYacht/Computer.cs`](ComputerYacht/Computer.cs:0):** Added `public Tuple&lt;int, int&gt; ChooseBestCategoryAndCalcScore(int[] finalDice, bool[] currentAvailableCategories, int currentUpperScore)` method. This method leverages the existing `ChooseScoreCategory` logic and returns the chosen category index and calculated score as a tuple.
+        *   **[`ComputerYacht/Yacht.cs`](ComputerYacht/Yacht.cs:0):** Added `public int GetPlayerUpperScore(int player)` method to retrieve the current upper section score for a given player.
+        *   **[`ComputerYacht/frmMain.cs`](ComputerYacht/frmMain.cs:0):** Modified `btnGetHoldSuggestion_Click` method. When `rollNumber == 3`:
+            *   It now calls `compPlayer.ChooseBestCategoryAndCalcScore` to get the AI's scoring decision.
+            *   It calls `yYacht.ApplyScoreAndFinalizeTurn` to record the score and advance game state.
+            *   Updates UI elements (disables scored category checkbox, refreshes scoreboard, shows message to user).
+            *   If the game ends, `ProcessGameOver` is called. Otherwise, UI is updated for the next turn/player.
+    *   **Status:** Implementation complete. AI now automatically chooses and records a score after the third roll when using the "获取保留建议" button with roll 3 selected.
